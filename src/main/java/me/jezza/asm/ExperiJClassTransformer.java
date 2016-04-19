@@ -15,6 +15,8 @@ public final class ExperiJClassTransformer implements ClassFileTransformer {
 
 	@Override
 	public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classFileBuffer) throws IllegalClassFormatException {
+		if (className.contains("intellij"))
+			return null;
 		ClassReader cr = new ClassReader(classFileBuffer);
 		ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_FRAMES);
 		ClassVisitor cv = new ExperiJClassVisitor(cw, className);

@@ -2,68 +2,99 @@ package me.jezza;
 
 import me.jezza.interfaces.Control;
 import me.jezza.interfaces.Experiment;
+import me.jezza.interfaces.Results;
 
 /**
  * @author Jezza
  */
 public class Test {
+	public static final Results RESULTS = ExperiJ.results("TestThing");
+
+	private static final char[] digits = {'0', '1'};
 
 	@Control("TestThing")
-	public static String test() {
-		System.out.println("Firing test");
-		return ";";
+	public static String integerToBinaryString(int length) {
+		StringBuilder result = new StringBuilder(length);
+		for (int i = 0; i < length; i++) {
+			String bin = Integer.toBinaryString(i);
+			if ((bin.chars().filter(c -> c == '1').count() & 1) != 0) {
+				result.append('B');
+			} else {
+				result.append('A');
+			}
+		}
+		return result.toString();
 	}
 
 	@Experiment("TestThing")
-	private static String test2() {
-		System.out.println("Firing test2");
-		return ";";
+	private static String fastToBinaryString(int length) {
+		StringBuilder result = new StringBuilder(length);
+		for (int i = 0; i < length; i++) {
+			if ((toBinary(i).chars().filter(c -> c == '1').count() & 1) != 0) {
+				result.append('B');
+			} else {
+				result.append('A');
+			}
+		}
+		return result.toString();
 	}
 
-//	@Control("TestExperiment")
-//	public String control(String value) {
-//		System.out.println("Testing time'C': " + value);
-//		return "Value1";
-//	}
-//
-//	@Experiment("TestExperiment")
-//	private String experiment(String value) {
-//		System.out.println("Testing time'1': " + value);
-//		return "Value2";
-//	}
-//
-//	@Experiment("TestExperiment")
-//	private String experiment2(String value) {
-//		System.out.println("Testing time'2': " + value);
-//		return "Value1";
-//	}
+	private static String toBinary(int val) {
+		int mag = Integer.SIZE - Integer.numberOfLeadingZeros(val);
+		int chars = Math.max(mag, 1);
+		char[] buf = new char[chars];
+		do {
+			buf[--chars] = digits[val & 1];
+			val >>>= 1;
+		} while (val != 0 && chars > 0);
+		// Use special constructor which takes over "buf".
+		return new String(buf);
+	}
 
-//	private String $experiment$TestExperiment_(String value) {
-//		ExperimentResults results = ExperimentResults.from("TestExperiment");
-//		results.startControl("control");
-//		String control = control_hidden(value);
-//		results.stopControl("control");
-//		long key = 0;
-//
-//		results.start("experiment1");
-//		String experiment1 = experiment1_hidden(value);
-//		key = results.stop("experiment1");
-//		results.reportEquality(key, "experiment1", control.equals(experiment1));
-//
-//		return control;
-//	}
-//
-//	private String $experiment$TestExperiment__(String value) {
-//		ExperimentResults results = ExperimentResults.from("TestExperiment");
-//		results.startControl("control");
-//		String control = control_hidden(value);
-//		results.stopControl("control");
-//
-//		results.start("experiment1");
-//		String experiment1 = experiment1_hidden(value);
-//		results.stop("experiment1");
-//		results.reportEquality("experiment1", control.equals(experiment1));
-//
-//		return control;
-//	}
+	@Experiment("TestThing")
+	private static String countBits(int length) {
+		StringBuilder result = new StringBuilder(length);
+		for (int i = 0; i < length; i++) {
+			if ((countOnes(i) & 1) != 0) {
+				result.append('B');
+			} else {
+				result.append('A');
+			}
+		}
+		return result.toString();
+	}
+
+	private static int countOnes(int val) {
+		int chars = Math.max(Integer.SIZE - Integer.numberOfLeadingZeros(val), 1);
+		int count = 0;
+		do {
+			if (digits[val & 1] == '1')
+				count++;
+			val >>>= 1;
+		} while (val != 0 && --chars > 0);
+		return count;
+	}
+
+	// String temp = "ABBABAABBAABABBABAABABBAABBABAABBAABABBAABBABAABABBABAABBAABABBABAABABBAABBABAABABBABAABBAABABBAABBABAABBAABABBABAABABBAABBABAABBAABABBAABBABAABABBABAABBAABABBAABBABAABBAABABBABAABABBAABBABAABABBABAABBAABABBABAABABBAABBABAABBAABABBAABBABAABABBABAABBAABABBA";
+
+	private static String $experiment$_TestThing_(int length) {
+		ExperimentContext context = ExperiJ.context("TestExperiment", "integerToBinary");
+		long key = context.startControl();
+		String control = integerToBinaryString(length);
+		context.stopControl(key);
+
+		context.start(key, "fastToBinaryString");
+		String experiment = fastToBinaryString(length);
+		context.stop(key, "fastToBinaryString");
+		context.reportEquality(key, "fastToBinaryString", control.equals(experiment));
+
+		context.start(key, "countBits");
+		experiment = countBits(length);
+		context.stop(key, "countBits");
+		context.reportEquality(key, "fastToBinaryString", control.equals(experiment));
+
+		context.compile(key);
+
+		return control;
+	}
 }

@@ -21,7 +21,7 @@ public final class Descriptor {
 	private int hash;
 	private String toString;
 
-	private Descriptor(String desc, final String signature, final String[] exceptions) {
+	private Descriptor(String desc, final String signature, final String[] exceptions, boolean staticAccess) {
 		this.signature = signature;
 		this.exceptions = exceptions;
 		final char[] chars = desc.toCharArray();
@@ -34,6 +34,7 @@ public final class Descriptor {
 		for (int pos = 1; pos < chars.length; pos = pos == expected ? pos + 1 : pos) {
 			char c = chars[pos];
 			expected = pos;
+			int index = staticAccess ? parameters.size() : parameters.size() + 1;
 			switch (c) {
 				case '[':
 					arrayCount++;
@@ -50,39 +51,39 @@ public final class Descriptor {
 						objectClass.append(c);
 					}
 					pos = tempPos;
-					part = new ObjectPart(parameters.size() + 1, arrayCount, objectClass.toString());
+					part = new ObjectPart(index, arrayCount, objectClass.toString());
 					break;
 				case 'Z':
 					// Boolean
-					part = new BooleanPart(parameters.size() + 1, arrayCount);
+					part = new BooleanPart(index, arrayCount);
 					break;
 				case 'B':
 					// Byte
-					part = new BytePart(parameters.size() + 1, arrayCount);
+					part = new BytePart(index, arrayCount);
 					break;
 				case 'S':
 					// Short
-					part = new ShortPart(parameters.size() + 1, arrayCount);
+					part = new ShortPart(index, arrayCount);
 					break;
 				case 'I':
 					// Int
-					part = new IntPart(parameters.size() + 1, arrayCount);
+					part = new IntPart(index, arrayCount);
 					break;
 				case 'F':
 					// Float
-					part = new FloatPart(parameters.size() + 1, arrayCount);
+					part = new FloatPart(index, arrayCount);
 					break;
 				case 'D':
 					// Double
-					part = new DoublePart(parameters.size() + 1, arrayCount);
+					part = new DoublePart(index, arrayCount);
 					break;
 				case 'J':
 					// Long
-					part = new LongPart(parameters.size() + 1, arrayCount);
+					part = new LongPart(index, arrayCount);
 					break;
 				case 'C':
 					// Char
-					part = new CharPart(parameters.size() + 1, arrayCount);
+					part = new CharPart(index, arrayCount);
 					break;
 				case 'V':
 					part = new VoidPart();
@@ -171,7 +172,15 @@ public final class Descriptor {
 		return toString;
 	}
 
-	public static Descriptor from(String desc, final String signature, final String[] exceptions) {
-		return new Descriptor(desc, signature, exceptions);
+	public static Descriptor from(String desc) {
+		return new Descriptor(desc, null, null, false);
+	}
+
+	public static Descriptor from(String desc, boolean staticAccess) {
+		return new Descriptor(desc, null, null, staticAccess);
+	}
+
+	public static Descriptor from(String desc, final String signature, final String[] exceptions, boolean staticAccess) {
+		return new Descriptor(desc, signature, exceptions, staticAccess);
 	}
 }

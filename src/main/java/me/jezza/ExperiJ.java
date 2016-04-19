@@ -1,14 +1,22 @@
 package me.jezza;
 
+import static me.jezza.lib.Strings.format;
+
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 import me.jezza.asm.ExperiJClassTransformer;
+import me.jezza.interfaces.Results;
 
 /**
  * @author Jezza
  */
 public final class ExperiJ {
+	public static final String INTERNAL_NAME = "me/jezza/ExperiJ";
+	public static final String CREATE_DESCRIPTOR = "(Ljava/lang/String;Ljava/lang/String;)Lme/jezza/ExperimentContext;";
+
 	/**
 	 * Used as the entry point for methods.
 	 */
@@ -18,6 +26,9 @@ public final class ExperiJ {
 	 * Used to rename the experiment methods, so that we can insert methods with the original names, thus gaining control of the flow.
 	 */
 	public static final String RENAME_METHOD_FORMAT = "{}_$hidden$";
+
+	protected static final Map<String, ExperimentResults> RESULT_MAP = new HashMap<>();
+	protected static final Map<String, ExperimentContext> CONTEXT_MAP = new HashMap<>();
 
 	private ExperiJ() {
 		throw new IllegalStateException();
@@ -29,33 +40,32 @@ public final class ExperiJ {
 	}
 
 	public static void main(String[] args) {
-//		String input = "(Ljava/lang/String;ZBSIFDJC)V";
-//		System.out.println(input);
-//		Descriptor first = Descriptor.from(input);
-//		System.out.println(first);
-
-		System.out.println(Test.test());
+		System.out.println(Test.integerToBinaryString(1));
+		System.out.println(Test.integerToBinaryString(2));
+		System.out.println(Test.integerToBinaryString(4));
+		System.out.println(Test.integerToBinaryString(8));
+		System.out.println(Test.integerToBinaryString(16));
+		System.out.println(Test.integerToBinaryString(32));
+		System.out.println(Test.integerToBinaryString(64));
+		System.out.println(Test.integerToBinaryString(128));
+		System.out.println(Test.integerToBinaryString(256));
 
 		System.out.println("--Internals--");
 		for (Method method : Test.class.getDeclaredMethods())
 			System.out.println(method.toGenericString());
-//		String generated = gen(256);
-//		System.out.println(generated);
-//		String temp = "ABBABAABBAABABBABAABABBAABBABAABBAABABBAABBABAABABBABAABBAABABBABAABABBAABBABAABABBABAABBAABABBAABBABAABBAABABBABAABABBAABBABAABBAABABBAABBABAABABBABAABBAABABBAABBABAABBAABABBABAABABBAABBABAABABBABAABBAABABBABAABABBAABBABAABBAABABBAABBABAABABBABAABBAABABBA";
-//		System.out.println(temp);
-//		System.out.println(temp.equals(generated));
 	}
 
-	private static String gen(int length) {
-		StringBuilder result = new StringBuilder(length);
-		for (int i = 0; i < length; i++) {
-			String bin = Integer.toBinaryString(i);
-			if ((bin.chars().filter(c -> c == '1').count() & 1) != 0) {
-				result.append('B');
-			} else {
-				result.append('A');
-			}
-		}
-		return result.toString();
+	public static Results results(String experimentName) {
+		return RESULT_MAP.computeIfAbsent(experimentName, ExperimentResults::new);
+	}
+
+	public static ExperimentContext context(String experimentName, String controlMethod) {
+		return CONTEXT_MAP.computeIfAbsent(experimentName, (k) -> new ExperimentContext(experimentName, controlMethod));
+	}
+
+	public static void setup(String experimentName) {
+		if (RESULT_MAP.containsKey(experimentName))
+			throw new IllegalStateException(format("Different Experiment Sets have the same name: {}", experimentName));
+		results(experimentName);
 	}
 }

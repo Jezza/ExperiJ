@@ -5,6 +5,7 @@ import static me.jezza.lib.Strings.confirmSafe;
 import java.util.HashMap;
 import java.util.Map;
 
+import me.jezza.ExperiJ;
 import me.jezza.descriptor.Descriptor;
 import me.jezza.repackage.org.objectweb.asm.ClassVisitor;
 import me.jezza.repackage.org.objectweb.asm.MethodVisitor;
@@ -30,7 +31,10 @@ public final class ExperiJClassVisitor extends ClassVisitor implements Opcodes {
 	}
 
 	protected ClassExperiment registerExperiment(String experimentName, String methodName, Descriptor desc, boolean control, boolean staticAccess) {
+		// Local var for the lambda
 		String className = this.className;
+		if (control)
+			ExperiJ.setup(experimentName);
 		ClassExperiment experiment = experiments.computeIfAbsent(confirmSafe(experimentName), k -> new ClassExperiment(className, k, staticAccess));
 		return experiment.register(methodName, desc, control, staticAccess);
 	}
@@ -41,7 +45,7 @@ public final class ExperiJClassVisitor extends ClassVisitor implements Opcodes {
 		for (ClassExperiment experiment : experiments.values()) {
 			experiment.validate();
 			// Generate experiment code
-			System.out.println("Generating Experiment: " + experiment.name());
+			System.out.println("Generating Experiments: " + experiment.name());
 			ExperimentVisitor ev = experiment.createEntryPoint(cv);
 			ev.visitCode();
 			// Load the results into a local variable with the offset of 0.
@@ -70,6 +74,8 @@ public final class ExperiJClassVisitor extends ClassVisitor implements Opcodes {
 				// Report the control <-> experimental equality
 				ev.reportEquality(resultIndex, keyIndex, i, controlMemoryIndex, experimentMemoryIndex);
 			}
+			// Compile the data, and insert it into the context.
+			ev.compile(resultIndex, keyIndex);
 			// Load the control's return value, and return it.
 			ev.load(controlMemoryIndex);
 			// End specific experiment code

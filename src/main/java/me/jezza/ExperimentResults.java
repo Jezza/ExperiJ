@@ -1,6 +1,8 @@
 package me.jezza;
 
-import java.util.HashMap;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import me.jezza.interfaces.Results;
@@ -8,46 +10,29 @@ import me.jezza.interfaces.Results;
 /**
  * @author Jezza
  */
-public final class ExperimentResults implements Results {
-	public static final String INTERNAL_NAME = "me/jezza/ExperimentResults";
-	public static final String CREATE_DESCRIPTOR = "(Ljava/lang/String;Ljava/lang/String;)L" + INTERNAL_NAME + ';';
+public final class ExperimentResults implements Results, Serializable {
+	private final List<ExperimentData> data = new ArrayList<>();
 
-	private static final Map<String, ExperimentResults> RESULTS = new HashMap<>();
+	private long executions = 0;
+	private double average = 0;
+	private double median = 0;
+	private double max = 0;
+	private double min = 0;
 
-	private final String experimentName;
-	private final String controlMethod;
-
-	private ExperimentResults(String experimentName, String controlMethod) {
-		this.experimentName = experimentName;
-		this.controlMethod = controlMethod;
+	protected ExperimentResults(String experimentName) {
+		System.out.println("Creating results for: " + experimentName);
 	}
 
-	public long startControl() {
-		System.out.println("[Starting Control]:" + experimentName + ':' + controlMethod);
-		return 1;
+	@Override
+	public long executionCount() {
+		return 0;
 	}
 
-	public void stopControl(long key) {
-		System.out.println("[Stopping Control]:" + experimentName + ':' + controlMethod + ':' + key);
+	@Override
+	public Map<String, Object> times() {
+		return null;
 	}
 
-	public void start(long key, String methodName) {
-		System.out.println("[Starting Experiment]:" + experimentName + ':' + methodName + ':' + key);
-	}
-
-	public void stop(long key, String methodName) {
-		System.out.println("[Stopping Experiment]:" + experimentName + ':' + methodName + ':' + key);
-	}
-
-	public void reportEquality(long key, String methodName, boolean equal) {
-		System.out.println("[Reporting Equality]:" + experimentName + ':' + methodName + ':' + key + ':' + equal);
-	}
-
-	public static Results from(String experimentName) {
-		return RESULTS.get(experimentName);
-	}
-
-	public static ExperimentResults create(String experimentName, String controlMethod) {
-		return RESULTS.computeIfAbsent(experimentName, (k) -> new ExperimentResults(experimentName, controlMethod));
+	protected void addDataEntry(ExperimentData data) {
 	}
 }

@@ -58,21 +58,6 @@ public final class ClassExperiment implements Opcodes {
 	private final List<String> methodNames;
 
 	/**
-	 * The original name of the control method.
-	 */
-	private String originalControlMethod;
-
-	/**
-	 * The original name of the experiment methods.
-	 * This has a perfect 1-to-1 ratio with {@link #methodNames}.
-	 * eg:
-	 * <pre>
-	 *     format(ExperiJ.RENAME_METHOD_FORMAT, methodNames.get(0)).equals(originalMethodNames.get(0)), returns true
-	 * </pre>
-	 */
-	private final List<String> originalMethodNames;
-
-	/**
 	 * The descriptor of all the methods.
 	 * NOTE: If any of the methods have a differing descriptor an exception WILL be thrown.
 	 */
@@ -84,7 +69,6 @@ public final class ClassExperiment implements Opcodes {
 		this.staticAccess = staticAccess;
 		this.entryPoint = format(ExperiJ.HIDDEN_EXPERIMENT_ENTRY_POINT_FORMAT, experimentName);
 		methodNames = new ArrayList<>(3);
-		originalMethodNames = new ArrayList<>(3);
 		System.out.println("Registering: " + experimentName);
 	}
 
@@ -92,12 +76,16 @@ public final class ClassExperiment implements Opcodes {
 		return name;
 	}
 
-	public String originalControlMethod() {
-		return originalControlMethod;
+	public String className() {
+		return className;
 	}
 
-	public String originalNames(int index) {
-		return originalMethodNames.get(index);
+	public String controlMethod() {
+		return controlMethod;
+	}
+
+	public String names(int index) {
+		return methodNames.get(index);
 	}
 
 	/**
@@ -191,17 +179,14 @@ public final class ClassExperiment implements Opcodes {
 		} else if (hash != this.desc.hashCode()) {
 			throw new IllegalStateException("Multiple method signatures across experiment: " + name + ". All methods of an experiment have to have the same method signatures for now. This might change in the future, if it does, this exception will be removed.");
 		}
-		String newMethodName = format(ExperiJ.RENAME_METHOD_FORMAT, methodName);
 		if (control) {
 			if (this.controlMethod != null)
 				throw new IllegalStateException("There are multiple control methods declared for the experiment: " + name);
-			controlMethod = newMethodName;
-			originalControlMethod = methodName;
+			controlMethod = methodName;
 		} else {
-			if (methodNames.contains(newMethodName) || !methodNames.add(newMethodName))
+			if (methodNames.contains(methodName) || !methodNames.add(methodName))
 				// I have no idea how this could even happen...
 				throw new IllegalStateException("There are multiple experiment methods with the same name: " + methodName);
-			originalMethodNames.add(methodName);
 		}
 		return this;
 	}
@@ -235,11 +220,11 @@ public final class ClassExperiment implements Opcodes {
 	}
 
 	public ClassExperiment invokeControl(MethodVisitor mv) {
-		return invoke(mv, controlMethod);
+		return invoke(mv, format(ExperiJ.RENAME_METHOD_FORMAT, controlMethod));
 	}
 
 	public ClassExperiment invokeExperiment(MethodVisitor mv, int index) {
-		return invoke(mv, methodNames.get(index));
+		return invoke(mv, format(ExperiJ.RENAME_METHOD_FORMAT, methodNames.get(index)));
 	}
 
 	private ClassExperiment invoke(MethodVisitor mv, String methodName) {

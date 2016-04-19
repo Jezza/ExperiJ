@@ -1,5 +1,7 @@
 package me.jezza.asm;
 
+import me.jezza.ExperiJ;
+import me.jezza.ExperimentContext;
 import me.jezza.ExperimentResults;
 import me.jezza.repackage.org.objectweb.asm.MethodVisitor;
 import me.jezza.repackage.org.objectweb.asm.Opcodes;
@@ -81,8 +83,8 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	public int createResults(int offset) {
 		int resultIndex = experiment.firstIndex() + offset;
 		visitLdcInsn(experiment.name());
-		visitLdcInsn(experiment.originalControlMethod());
-		visitMethodInsn(INVOKESTATIC, ExperimentResults.INTERNAL_NAME, "create", ExperimentResults.CREATE_DESCRIPTOR, false);
+		visitLdcInsn(experiment.controlMethod());
+		visitMethodInsn(INVOKESTATIC, ExperiJ.INTERNAL_NAME, "context", ExperiJ.CREATE_DESCRIPTOR, false);
 		visitVarInsn(ASTORE, resultIndex);
 		return resultIndex;
 	}
@@ -97,7 +99,7 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		// Load the results variable
 		visitVarInsn(ALOAD, resultIndex);
 		// Invoke
-		visitMethodInsn(INVOKEVIRTUAL, ExperimentResults.INTERNAL_NAME, "startControl", "()J", false);
+		visitMethodInsn(INVOKEVIRTUAL, ExperimentContext.INTERNAL_NAME, "startControl", "()J", false);
 		return this;
 	}
 
@@ -114,7 +116,7 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		// Load the unique key index
 		visitVarInsn(LLOAD, keyIndex);
 		// Invoke
-		visitMethodInsn(INVOKEVIRTUAL, ExperimentResults.INTERNAL_NAME, "stopControl", "(J)V", false);
+		visitMethodInsn(INVOKEVIRTUAL, ExperimentContext.INTERNAL_NAME, "stopControl", "(J)V", false);
 		return this;
 	}
 
@@ -158,9 +160,9 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		// Load the unique key index
 		visitVarInsn(LLOAD, keyIndex);
 		// Load the method name
-		visitLdcInsn(experiment.originalNames(index));
+		visitLdcInsn(experiment.names(index));
 		// Invoke
-		visitMethodInsn(INVOKEVIRTUAL, ExperimentResults.INTERNAL_NAME, start ? "start" : "stop", "(JLjava/lang/String;)V", false);
+		visitMethodInsn(INVOKEVIRTUAL, ExperimentContext.INTERNAL_NAME, start ? "start" : "stop", "(JLjava/lang/String;)V", false);
 		return this;
 	}
 
@@ -180,7 +182,7 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		// Load the equality key
 		visitVarInsn(LLOAD, keyIndex);
 		// Load the method name
-		visitLdcInsn(experiment.originalNames(experimentIndex));
+		visitLdcInsn(experiment.names(experimentIndex));
 		// Load the initial control result, and this experiment's result.
 		int loadCode = experiment.loadCode();
 		visitVarInsn(loadCode, controlMemoryIndex);
@@ -188,7 +190,17 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		// Dynamic equality checks.
 		experiment.equality(mv);
 		// Fire the reporting method
-		mv.visitMethodInsn(INVOKEVIRTUAL, ExperimentResults.INTERNAL_NAME, "reportEquality", "(JLjava/lang/String;Z)V", false);
+		mv.visitMethodInsn(INVOKEVIRTUAL, ExperimentContext.INTERNAL_NAME, "reportEquality", "(JLjava/lang/String;Z)V", false);
+		return this;
+	}
+
+	public ExperimentVisitor compile(int resultIndex, int keyIndex) {
+		// Load the results variable
+		visitVarInsn(ALOAD, resultIndex);
+		// Load the equality key
+		visitVarInsn(LLOAD, keyIndex);
+		// Fire the compile method
+		mv.visitMethodInsn(INVOKEVIRTUAL, ExperimentContext.INTERNAL_NAME, "compile", "(J)V", false);
 		return this;
 	}
 }
