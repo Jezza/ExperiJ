@@ -1,8 +1,8 @@
 package me.jezza.asm;
 
-import me.jezza.ExperiJ;
 import me.jezza.ExperimentContext;
-import me.jezza.ExperimentResults;
+import me.jezza.descriptor.Descriptor;
+import me.jezza.descriptor.Param;
 import me.jezza.repackage.org.objectweb.asm.MethodVisitor;
 import me.jezza.repackage.org.objectweb.asm.Opcodes;
 
@@ -76,6 +76,34 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		return memoryIndex;
 	}
 
+	private void loadInt(int value) {
+		switch (value) {
+			case 1:
+				visitInsn(ICONST_1);
+				break;
+			case 2:
+				visitInsn(ICONST_2);
+				break;
+			case 3:
+				visitInsn(ICONST_3);
+				break;
+			case 4:
+				visitInsn(ICONST_4);
+				break;
+			case 5:
+				visitInsn(ICONST_5);
+				break;
+			default:
+				if (value <= Byte.MAX_VALUE) {
+					visitIntInsn(BIPUSH, value);
+				} else if (value <= Short.MAX_VALUE) {
+					visitIntInsn(SIPUSH, value);
+				} else {
+					visitLdcInsn(value);
+				}
+		}
+	}
+
 	/**
 	 * @param offset - Offset from first initial free memory index.
 	 * @return - The index that the results object is stored within, NOTE: NOT the offset.
@@ -84,13 +112,14 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		int resultIndex = experiment.firstIndex() + offset;
 		visitLdcInsn(experiment.name());
 		visitLdcInsn(experiment.controlMethod());
-		visitMethodInsn(INVOKESTATIC, ExperiJ.INTERNAL_NAME, "context", ExperiJ.CREATE_DESCRIPTOR, false);
+		loadInt(experiment.size());
+		visitMethodInsn(INVOKESTATIC, "me/jezza/ExperiJ", "context", "(Ljava/lang/String;Ljava/lang/String;I)Lme/jezza/ExperimentContext;", false);
 		visitVarInsn(ASTORE, resultIndex);
 		return resultIndex;
 	}
 
 	/**
-	 * Fires the startControl() method within {@link ExperimentResults} to signal the start of the control.
+	 * Fires the startControl() method within {@link ExperimentContext} to signal the start of the control.
 	 *
 	 * @param resultIndex - The memory index of the results.
 	 * @return - Chaining.
@@ -98,13 +127,29 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	public ExperimentVisitor startControl(int resultIndex) {
 		// Load the results variable
 		visitVarInsn(ALOAD, resultIndex);
+		Descriptor desc = experiment.desc();
+		int paramCount = desc.parameterCount();
+		// Load the array size
+		loadInt(paramCount);
+		// Create array of a string type
+		visitTypeInsn(ANEWARRAY, "java/lang/String");
+
+		for (int i = 0; i < paramCount; i++) {
+			visitInsn(DUP);
+			// Load the array index that will be used
+			loadInt(i);
+			Param param = desc.parameter(i);
+			// Load the parameter, and call String.valueOf
+			param.load(this).string(this);
+			visitInsn(AASTORE);
+		}
 		// Invoke
-		visitMethodInsn(INVOKEVIRTUAL, ExperimentContext.INTERNAL_NAME, "startControl", "()J", false);
+		visitMethodInsn(INVOKEVIRTUAL, ExperimentContext.INTERNAL_NAME, "startControl", "([Ljava/lang/String;)J", false);
 		return this;
 	}
 
 	/**
-	 * Fires the stopControl() method within {@link ExperimentResults} to signal the end of the control.
+	 * Fires the stopControl() method within {@link ExperimentContext} to signal the end of the control.
 	 *
 	 * @param resultIndex - The memory index of the results.
 	 * @param keyIndex    - The memory index of the key used to identify the specific experiment run.
@@ -121,10 +166,10 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	}
 
 	/**
-	 * Fires a generic start() method within {@link ExperimentResults} to signal the start of an experiment.
+	 * Fires a generic start() method within {@link ExperimentContext} to signal the start of an experiment.
 	 *
 	 * @param index       - The experiment's index
-	 * @param resultIndex - The memory index of the {@link ExperimentResults} object
+	 * @param resultIndex - The memory index of the {@link ExperimentContext} object
 	 * @param keyIndex    - The memory index of the key used to identify the specific experiment run.
 	 * @return - Chaining.
 	 */
@@ -133,11 +178,11 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	}
 
 	/**
-	 * Fires a generic stop() method within {@link ExperimentResults} to signal the stop of an experiment.
+	 * Fires a generic stop() method within {@link ExperimentContext} to signal the stop of an experiment.
 	 * NOTE: stop(Ljava/lang/String;)J returns a long that should be used to declare the equality of the experiments.
 	 *
 	 * @param index       - The experiment's index
-	 * @param resultIndex - The memory index of the {@link ExperimentResults} object
+	 * @param resultIndex - The memory index of the {@link ExperimentContext} object
 	 * @param keyIndex    - The memory index of the key used to identify the specific experiment run.
 	 * @return - Chaining.
 	 */
@@ -149,7 +194,7 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	 * Just a delegate method that holds the common code from starting and stopping an experiment's measurement.
 	 *
 	 * @param index       - The experiment's index
-	 * @param resultIndex - The memory index of the {@link ExperimentResults} object
+	 * @param resultIndex - The memory index of the {@link ExperimentContext} object
 	 * @param keyIndex    - The memory index of the key used to identify the specific experiment run.
 	 * @param start       - if the call should start or stop the experiment's measurement.
 	 * @return - Chaining.

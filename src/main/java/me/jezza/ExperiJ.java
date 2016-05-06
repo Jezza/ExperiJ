@@ -9,14 +9,12 @@ import java.util.Map;
 
 import me.jezza.asm.ExperiJClassTransformer;
 import me.jezza.interfaces.Results;
+import me.jezza.test.Test;
 
 /**
  * @author Jezza
  */
 public final class ExperiJ {
-	public static final String INTERNAL_NAME = "me/jezza/ExperiJ";
-	public static final String CREATE_DESCRIPTOR = "(Ljava/lang/String;Ljava/lang/String;)Lme/jezza/ExperimentContext;";
-
 	/**
 	 * Used as the entry point for methods.
 	 */
@@ -27,6 +25,9 @@ public final class ExperiJ {
 	 */
 	public static final String RENAME_METHOD_FORMAT = "{}_$hidden$";
 
+
+	public static final boolean DEBUG = Boolean.getBoolean("experij.debug");
+
 	protected static final Map<String, ExperimentResults> RESULT_MAP = new HashMap<>();
 	protected static final Map<String, ExperimentContext> CONTEXT_MAP = new HashMap<>();
 
@@ -35,6 +36,8 @@ public final class ExperiJ {
 	}
 
 	public static void premain(String agentArgs, Instrumentation inst) {
+		if (DEBUG)
+			System.out.println("ExperiJ is in DEBUG mode.");
 		System.out.println("Injecting: " + ExperiJClassTransformer.class.getCanonicalName());
 		inst.addTransformer(new ExperiJClassTransformer());
 	}
@@ -53,14 +56,17 @@ public final class ExperiJ {
 		System.out.println("--Internals--");
 		for (Method method : Test.class.getDeclaredMethods())
 			System.out.println(method.toGenericString());
+
+		System.out.println("--Results--");
+		System.out.println(Test.TEST_THING);
 	}
 
 	public static Results results(String experimentName) {
-		return RESULT_MAP.computeIfAbsent(experimentName, ExperimentResults::new);
+		return RESULT_MAP.computeIfAbsent(experimentName, ExperimentResults::new).immutable();
 	}
 
-	public static ExperimentContext context(String experimentName, String controlMethod) {
-		return CONTEXT_MAP.computeIfAbsent(experimentName, (k) -> new ExperimentContext(experimentName, controlMethod));
+	public static ExperimentContext context(String experimentName, String controlMethod, int experimentCount) {
+		return CONTEXT_MAP.computeIfAbsent(experimentName, k -> new ExperimentContext(k, controlMethod, experimentCount));
 	}
 
 	public static void setup(String experimentName) {

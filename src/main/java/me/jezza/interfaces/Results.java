@@ -1,12 +1,36 @@
 package me.jezza.interfaces;
 
-import java.util.Map;
+import java.util.Iterator;
+import java.util.ListIterator;
+
+import me.jezza.Execution;
 
 /**
  * @author Jezza
  */
-public interface Results {
-	long executionCount();
+public interface Results extends Iterable<Execution> {
+	int size();
 
-	Map<String, Object> times();
+	boolean isEmpty();
+
+	Execution get(int index);
+
+	int indexOf(Execution o);
+
+	int lastIndexOf(Execution o);
+
+	@Override
+	Iterator<Execution> iterator();
+
+	default ListIterator<Execution> listIterator() {
+		return listIterator(0);
+	}
+
+	ListIterator<Execution> listIterator(int index);
+
+	Results subList(int fromIndex, int toIndex);
+
+	Execution[] toArray();
+
+	<T> T[] toArray(T[] a);
 }

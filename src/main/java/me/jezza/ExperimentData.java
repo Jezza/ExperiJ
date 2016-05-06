@@ -1,27 +1,65 @@
 package me.jezza;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * @author Jezza
  */
-public class ExperimentData {
+public final class ExperimentData {
+	private final String experimentName;
 	private final String controlMethod;
+	private final List<String> params;
+	private final Measurement[] measurements;
 
-	public ExperimentData(String controlMethod) {
+	private long control = -1;
+	private int active = 0;
+
+	public ExperimentData(String experimentName, String controlMethod, int experimentCount, String[] params) {
+		this.experimentName = experimentName;
 		this.controlMethod = controlMethod;
+		this.params = Arrays.asList(params);
+		measurements = new Measurement[experimentCount];
 	}
 
 	public void startControl() {
+		control = System.nanoTime();
 	}
 
 	public void stopControl() {
+		control = System.nanoTime() - control;
+
 	}
 
 	public void start(String methodName) {
+		Measurement measurement = new Measurement();
+		measurement.methodName = methodName;
+		measurement.time = System.nanoTime();
+		measurements[active] = measurement;
 	}
 
 	public void stop(String methodName) {
+		Measurement measurement = measurements[active];
+		measurement.time = System.nanoTime() - measurement.time;
 	}
 
 	public void equality(String methodName, boolean equal) {
+		measurements[active++].equal = equal;
+	}
+
+	public void compile(ExperimentResults results) {
+		Map<String, ExperimentTime> experiments = new HashMap<>();
+		for (Measurement s : measurements)
+			experiments.put(s.methodName, new ExperimentTime(s.methodName, s.time, s.equal));
+		results.add(new Execution(experimentName, params, new ControlTime(controlMethod, control), experiments));
+	}
+
+	private static class Measurement {
+		long time = -1;
+		String methodName;
+		boolean equal;
 	}
 }
+

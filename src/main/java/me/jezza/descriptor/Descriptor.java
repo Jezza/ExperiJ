@@ -4,19 +4,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import me.jezza.descriptor.part.*;
+import me.jezza.descriptor.param.*;
 import me.jezza.repackage.org.objectweb.asm.MethodVisitor;
 
 /**
  * @author Jezza
  */
 public final class Descriptor {
-	private static final Part[] EMPTY = new Part[0];
+	private static final Param[] EMPTY = new Param[0];
 
 	private final String signature;
 	private final String[] exceptions;
-	private final Part[] parameters;
-	private final Part returnPart;
+	private final Param[] parameters;
+	private final Param returnParam;
 
 	private int hash;
 	private String toString;
@@ -27,10 +27,10 @@ public final class Descriptor {
 		final char[] chars = desc.toCharArray();
 		if (chars.length < 3 || chars[0] != '(')
 			throw new IllegalArgumentException("Illegal Descriptor.");
-		Part part;
+		Param param;
 		int expected;
 		int arrayCount = 0;
-		List<Part> parameters = new ArrayList<>(4);
+		List<Param> parameters = new ArrayList<>(4);
 		for (int pos = 1; pos < chars.length; pos = pos == expected ? pos + 1 : pos) {
 			char c = chars[pos];
 			expected = pos;
@@ -51,62 +51,62 @@ public final class Descriptor {
 						objectClass.append(c);
 					}
 					pos = tempPos;
-					part = new ObjectPart(index, arrayCount, objectClass.toString());
+					param = new ObjectParam(index, arrayCount, objectClass.toString());
 					break;
 				case 'Z':
 					// Boolean
-					part = new BooleanPart(index, arrayCount);
+					param = new BooleanParam(index, arrayCount);
 					break;
 				case 'B':
 					// Byte
-					part = new BytePart(index, arrayCount);
+					param = new ByteParam(index, arrayCount);
 					break;
 				case 'S':
 					// Short
-					part = new ShortPart(index, arrayCount);
+					param = new ShortParam(index, arrayCount);
 					break;
 				case 'I':
 					// Int
-					part = new IntPart(index, arrayCount);
+					param = new IntParam(index, arrayCount);
 					break;
 				case 'F':
 					// Float
-					part = new FloatPart(index, arrayCount);
+					param = new FloatParam(index, arrayCount);
 					break;
 				case 'D':
 					// Double
-					part = new DoublePart(index, arrayCount);
+					param = new DoubleParam(index, arrayCount);
 					break;
 				case 'J':
 					// Long
-					part = new LongPart(index, arrayCount);
+					param = new LongParam(index, arrayCount);
 					break;
 				case 'C':
 					// Char
-					part = new CharPart(index, arrayCount);
+					param = new CharParam(index, arrayCount);
 					break;
 				case 'V':
-					part = new VoidPart();
+					param = new VoidParam();
 					break;
 				default:
 					throw new UnsupportedOperationException("Unknown Descriptor Byte: " + c);
 			}
-			parameters.add(part);
+			parameters.add(param);
 			arrayCount = 0;
 		}
 		if (parameters.isEmpty())
 			throw new IllegalArgumentException("");
 		if (parameters.size() == 1) {
 			this.parameters = EMPTY;
-			this.returnPart = parameters.get(0);
+			this.returnParam = parameters.get(0);
 		} else {
 			this.parameters = parameters.subList(0, parameters.size() - 1).toArray(EMPTY);
-			this.returnPart = parameters.get(parameters.size() - 1);
+			this.returnParam = parameters.get(parameters.size() - 1);
 		}
 	}
 
-	public Part returnPart() {
-		return returnPart;
+	public Param returnPart() {
+		return returnParam;
 	}
 
 	public String signature() {
@@ -117,18 +117,27 @@ public final class Descriptor {
 		return exceptions;
 	}
 
-	public void loadAll(MethodVisitor mv) {
-		if (parameters.length > 0)
-			for (Part part : parameters)
-				part.load(mv);
-	}
-
-	public void equality(MethodVisitor mv) {
-		returnPart.equality(mv);
+	public Param parameter(int index) {
+		return parameters[index];
 	}
 
 	public int parameterCount() {
 		return parameters.length;
+	}
+
+	public void load(MethodVisitor mv, int index) {
+		if (parameters.length > 0)
+				parameters[index].load(mv);
+	}
+
+	public void loadAll(MethodVisitor mv) {
+		if (parameters.length > 0)
+			for (Param param : parameters)
+				param.load(mv);
+	}
+
+	public void equality(MethodVisitor mv) {
+		returnParam.equality(mv);
 	}
 
 	@Override
@@ -165,9 +174,9 @@ public final class Descriptor {
 	public String toString() {
 		if (toString == null) {
 			StringBuilder builder = new StringBuilder("(");
-			for (Part part : parameters)
-				builder.append(part);
-			toString = builder.append(')').append(returnPart).toString();
+			for (Param param : parameters)
+				builder.append(param);
+			toString = builder.append(')').append(returnParam).toString();
 		}
 		return toString;
 	}

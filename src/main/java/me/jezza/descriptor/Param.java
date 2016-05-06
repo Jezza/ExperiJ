@@ -9,7 +9,7 @@ import me.jezza.repackage.org.objectweb.asm.Opcodes;
  *
  * @author Jezza
  */
-public abstract class Part {
+public abstract class Param {
 	protected final int index;
 	protected final int arrayCount;
 	protected final int loadCode;
@@ -17,8 +17,9 @@ public abstract class Part {
 	protected final int returnCode;
 	protected final String data;
 	protected final String equalitySignature;
+	protected final String stringSignature;
 
-	public Part(int index, int arrayCount, int loadCode, int returnCode, int storeCode, String data) {
+	public Param(int index, int arrayCount, int loadCode, int returnCode, int storeCode, String data) {
 		this.index = index;
 		this.arrayCount = arrayCount;
 		this.loadCode = loadCode;
@@ -33,19 +34,31 @@ public abstract class Part {
 			builder.append(data);
 			this.data = builder.toString();
 		}
-		equalitySignature = buildEqualitySignature(data);
+		equalitySignature = equalitySignature(data);
+		stringSignature = stringSignature(data);
 	}
 
-	protected String buildEqualitySignature(String data) {
+	protected String equalitySignature(String data) {
 		return '(' + data + data + ")Z";
 	}
 
-	public void equality(MethodVisitor mv) {
-		mv.visitMethodInsn(Opcodes.INVOKESTATIC, Equality.INTERNAL_NAME, "equals", equalitySignature, false);
+	protected String stringSignature(String data) {
+		return '(' + data + ")Ljava/lang/String;";
 	}
 
-	public void load(MethodVisitor mv) {
+	public Param equality(MethodVisitor mv) {
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, Equality.INTERNAL_NAME, "equals", equalitySignature, false);
+		return this;
+	}
+
+	public Param string(MethodVisitor mv) {
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/String", "valueOf", stringSignature, false);
+		return this;
+	}
+
+	public Param load(MethodVisitor mv) {
 		mv.visitVarInsn(loadCode(), index);
+		return this;
 	}
 
 	public int loadCode() {

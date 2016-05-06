@@ -89,6 +89,13 @@ public final class ClassExperiment implements Opcodes {
 	}
 
 	/**
+	 * @return - The descriptor that all experiment methods and the control method should match.
+	 */
+	public Descriptor desc() {
+		return desc;
+	}
+
+	/**
 	 * @return - The bytecode value that has to be used when loading objects from the experiments.
 	 */
 	public int loadCode() {
@@ -134,9 +141,7 @@ public final class ClassExperiment implements Opcodes {
 	 * @return - The first free memory index. Accounts for parameters, and 'this'.
 	 */
 	public int firstIndex() {
-		if (staticAccess)
-			return desc.parameterCount();
-		return desc.parameterCount() + 1;
+		return staticAccess ? desc.parameterCount() : desc.parameterCount() + 1;
 	}
 
 	/**
