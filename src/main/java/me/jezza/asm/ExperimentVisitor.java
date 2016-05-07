@@ -2,7 +2,6 @@ package me.jezza.asm;
 
 import me.jezza.ExperimentContext;
 import me.jezza.descriptor.Descriptor;
-import me.jezza.descriptor.Param;
 import me.jezza.repackage.org.objectweb.asm.MethodVisitor;
 import me.jezza.repackage.org.objectweb.asm.Opcodes;
 
@@ -138,9 +137,8 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 			visitInsn(DUP);
 			// Load the array index that will be used
 			loadInt(i);
-			Param param = desc.parameter(i);
 			// Load the parameter, and call String.valueOf
-			param.load(this).string(this);
+			desc.parameter(i).load(this).invokeToString(this);
 			visitInsn(AASTORE);
 		}
 		// Invoke
@@ -233,7 +231,7 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		visitVarInsn(loadCode, controlMemoryIndex);
 		visitVarInsn(loadCode, experimentMemoryIndex);
 		// Dynamic equality checks.
-		experiment.equality(mv);
+		experiment.invokeEquals(mv);
 		// Fire the reporting method
 		mv.visitMethodInsn(INVOKEVIRTUAL, ExperimentContext.INTERNAL_NAME, "reportEquality", "(JLjava/lang/String;Z)V", false);
 		return this;

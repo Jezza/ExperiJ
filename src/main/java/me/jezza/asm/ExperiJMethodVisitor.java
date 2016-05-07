@@ -24,7 +24,7 @@ public final class ExperiJMethodVisitor extends MethodVisitor implements Opcodes
 	protected ExperiJMethodVisitor(ExperiJClassVisitor cv, MethodVisitor mv, int access, String methodName, String desc, final String signature, final String[] exceptions) {
 		super(ASM5, mv);
 		this.cv = cv;
-		this.staticAccess = (access & ACC_STATIC) == ACC_STATIC;
+		this.staticAccess = (access & ACC_STATIC) != 0;
 		this.methodName = methodName;
 		this.desc = Descriptor.from(desc, signature, exceptions, staticAccess);
 	}

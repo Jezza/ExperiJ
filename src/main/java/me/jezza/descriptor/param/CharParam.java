@@ -8,6 +8,21 @@ import me.jezza.repackage.org.objectweb.asm.Opcodes;
  */
 public final class CharParam extends Param {
 	public CharParam(int index, int arrayCount) {
-		super(index, arrayCount, Opcodes.ILOAD, Opcodes.IRETURN, Opcodes.ISTORE, "C");
+		super(index, arrayCount, "C");
+	}
+
+	@Override
+	public int loadCode() {
+		return Opcodes.ILOAD;
+	}
+
+	@Override
+	public int returnCode() {
+		return Opcodes.IRETURN;
+	}
+
+	@Override
+	public int storeCode() {
+		return Opcodes.ISTORE;
 	}
 }

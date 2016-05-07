@@ -1,7 +1,6 @@
 package me.jezza.test;
 
 import me.jezza.ExperiJ;
-import me.jezza.ExperimentContext;
 import me.jezza.interfaces.Control;
 import me.jezza.interfaces.Experiment;
 import me.jezza.interfaces.Results;
@@ -55,6 +54,21 @@ public class Test {
 		return result.toString();
 	}
 
+	@Control("ArrayTest")
+	private static int[] old(String creation) {
+		return new int[]{creation.length()};
+	}
+
+	@Experiment("ArrayTest")
+	private static int[] newSlow(String creation) {
+		return new int[]{creation.length()};
+	}
+
+	@Experiment("ArrayTest")
+	private static int[] newFast(String creation) {
+		return new int[]{creation.length()};
+	}
+
 	private static String toBinary(int val) {
 		int mag = Integer.SIZE - Integer.numberOfLeadingZeros(val);
 		int chars = Math.max(mag, 1);
@@ -77,24 +91,24 @@ public class Test {
 
 	// String temp = "ABBABAABBAABABBABAABABBAABBABAABBAABABBAABBABAABABBABAABBAABABBABAABABBAABBABAABABBABAABBAABABBAABBABAABBAABABBABAABABBAABBABAABBAABABBAABBABAABABBABAABBAABABBAABBABAABBAABABBABAABABBAABBABAABABBABAABBAABABBABAABABBAABBABAABBAABABBAABBABAABABBABAABBAABABBA";
 
-	private static String $experiment$_TestThing_(int length) {
-		ExperimentContext context = ExperiJ.context("TestExperiment", "integerToBinary", 2);
-		long key = context.startControl();
-		String control = integerToBinaryString(length);
-		context.stopControl(key);
-
-		context.start(key, "fastToBinaryString");
-		String experiment = fastToBinaryString(length);
-		context.stop(key, "fastToBinaryString");
-		context.reportEquality(key, "fastToBinaryString", control.equals(experiment));
-
-		context.start(key, "countBits");
-		experiment = countBits(length);
-		context.stop(key, "countBits");
-		context.reportEquality(key, "fastToBinaryString", control.equals(experiment));
-
-		context.compile(key);
-
-		return control;
-	}
+//	private static String $experiment$_TestThing_(int length) {
+//		ExperimentContext context = ExperiJ.context("TestExperiment", "integerToBinary", 2);
+//		long key = context.startControl();
+//		String control = integerToBinaryString(length);
+//		context.stopControl(key);
+//
+//		context.start(key, "fastToBinaryString");
+//		String experiment = fastToBinaryString(length);
+//		context.stop(key, "fastToBinaryString");
+//		context.reportEquality(key, "fastToBinaryString", control.equals(experiment));
+//
+//		context.start(key, "countBits");
+//		experiment = countBits(length);
+//		context.stop(key, "countBits");
+//		context.reportEquality(key, "fastToBinaryString", control.equals(experiment));
+//
+//		context.compile(key);
+//
+//		return control;
+//	}
 }

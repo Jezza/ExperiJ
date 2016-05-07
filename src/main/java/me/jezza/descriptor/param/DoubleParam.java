@@ -8,6 +8,21 @@ import me.jezza.repackage.org.objectweb.asm.Opcodes;
  */
 public final class DoubleParam extends Param {
 	public DoubleParam(int index, int arrayCount) {
-		super(index, arrayCount, Opcodes.DLOAD, Opcodes.DRETURN, Opcodes.DSTORE, "D");
+		super(index, arrayCount, "D");
+	}
+
+	@Override
+	public int loadCode() {
+		return Opcodes.DLOAD;
+	}
+
+	@Override
+	public int returnCode() {
+		return Opcodes.DRETURN;
+	}
+
+	@Override
+	public int storeCode() {
+		return Opcodes.DSTORE;
 	}
 }

@@ -7,20 +7,33 @@ import me.jezza.repackage.org.objectweb.asm.Opcodes;
  * @author Jezza
  */
 public final class ObjectParam extends Param {
-	private final String className;
 
-	public ObjectParam(int index, int arrayCount, String className) {
-		super(index, arrayCount, Opcodes.ALOAD, Opcodes.ARETURN, Opcodes.ASTORE, 'L' + className + ';');
-		this.className = className;
+	public ObjectParam(int index, int arrayCount, String data) {
+		super(index, arrayCount, data);
 	}
 
 	@Override
-	protected String equalitySignature(String data) {
+	protected String buildEqualitySignature(String data) {
 		return "(Ljava/lang/Object;Ljava/lang/Object;)Z";
 	}
 
 	@Override
-	protected String stringSignature(String data) {
+	protected String buildStringSignature(String data) {
 		return "(Ljava/lang/Object;)Ljava/lang/String;";
+	}
+
+	@Override
+	public int loadCode() {
+		return Opcodes.ALOAD;
+	}
+
+	@Override
+	public int returnCode() {
+		return Opcodes.ARETURN;
+	}
+
+	@Override
+	public int storeCode() {
+		return Opcodes.ASTORE;
 	}
 }

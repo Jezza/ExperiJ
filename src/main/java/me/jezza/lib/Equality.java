@@ -4,8 +4,6 @@ package me.jezza.lib;
  * @author Jezza
  */
 public final class Equality {
-	public static final String INTERNAL_NAME = "me/jezza/lib/Equality";
-
 	private Equality() {
 		throw new IllegalStateException();
 	}

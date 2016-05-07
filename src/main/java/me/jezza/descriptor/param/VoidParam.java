@@ -10,7 +10,32 @@ import me.jezza.repackage.org.objectweb.asm.Opcodes;
 public final class VoidParam extends Param {
 
 	public VoidParam() {
-		super(0, 0, 0, Opcodes.RETURN, 0, "V");
+		super(0, 0, "V");
+	}
+
+	@Override
+	public int loadCode() {
+		return 0;
+	}
+
+	@Override
+	public int returnCode() {
+		return Opcodes.RETURN;
+	}
+
+	@Override
+	public int storeCode() {
+		return 0;
+	}
+
+	@Override
+	public Param invokeEquals(MethodVisitor mv) {
+		throw new IllegalStateException("A void declaration is attempting to be equaled. This makes no sense.");
+	}
+
+	@Override
+	public Param invokeToString(MethodVisitor mv) {
+		throw new IllegalStateException("A void declaration is attempting to be string'd. This makes no sense.");
 	}
 
 	@Override

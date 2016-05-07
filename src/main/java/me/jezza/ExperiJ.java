@@ -28,6 +28,8 @@ public final class ExperiJ {
 
 	public static final boolean DEBUG = Boolean.getBoolean("experij.debug");
 
+	public static final boolean DISABLED = Boolean.getBoolean("experij.disable");
+
 	protected static final Map<String, ExperimentResults> RESULT_MAP = new HashMap<>();
 	protected static final Map<String, ExperimentContext> CONTEXT_MAP = new HashMap<>();
 
@@ -36,6 +38,10 @@ public final class ExperiJ {
 	}
 
 	public static void premain(String agentArgs, Instrumentation inst) {
+		if (DISABLED) {
+			System.out.println("ExperiJ has been disabled via SystemProperties");
+			return;
+		}
 		if (DEBUG)
 			System.out.println("ExperiJ is in DEBUG mode.");
 		System.out.println("Injecting: " + ExperiJClassTransformer.class.getCanonicalName());

@@ -163,8 +163,8 @@ public final class ClassExperiment implements Opcodes {
 	 * @param mv - The {@link MethodVisitor} that should be used to write the instructions.
 	 * @return - Chaining
 	 */
-	public ClassExperiment equality(MethodVisitor mv) {
-		desc.equality(mv);
+	public ClassExperiment invokeEquals(MethodVisitor mv) {
+		desc.returnPart().invokeEquals(mv);
 		return this;
 	}
 

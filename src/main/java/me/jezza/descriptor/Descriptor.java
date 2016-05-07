@@ -1,7 +1,7 @@
 package me.jezza.descriptor;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import me.jezza.descriptor.param.*;
@@ -18,20 +18,20 @@ public final class Descriptor {
 	private final Param[] parameters;
 	private final Param returnParam;
 
-	private int hash;
-	private String toString;
+	private transient int hash;
+	private transient String toString;
 
 	private Descriptor(String desc, final String signature, final String[] exceptions, boolean staticAccess) {
 		this.signature = signature;
 		this.exceptions = exceptions;
 		final char[] chars = desc.toCharArray();
-		if (chars.length < 3 || chars[0] != '(')
+		final int length = chars.length;
+		if (length < 3 || chars[0] != '(')
 			throw new IllegalArgumentException("Illegal Descriptor.");
 		Param param;
-		int expected;
 		int arrayCount = 0;
-		List<Param> parameters = new ArrayList<>(4);
-		for (int pos = 1; pos < chars.length; pos = pos == expected ? pos + 1 : pos) {
+		List<Param> parameters = new LinkedList<>();
+		for (int expected, pos = 1; pos < length; pos = pos == expected ? pos + 1 : pos) {
 			char c = chars[pos];
 			expected = pos;
 			int index = staticAccess ? parameters.size() : parameters.size() + 1;
@@ -42,16 +42,16 @@ public final class Descriptor {
 					continue;
 				case 'L':
 					// Object
-					StringBuilder objectClass = new StringBuilder();
-					int tempPos = pos + 1;
-					while (tempPos < chars.length) {
-						c = chars[tempPos++];
+					StringBuilder data = new StringBuilder("L");
+					pos++;
+					while (pos < length) {
+						c = chars[pos++];
 						if (c == ';')
 							break;
-						objectClass.append(c);
+						data.append(c);
 					}
-					pos = tempPos;
-					param = new ObjectParam(index, arrayCount, objectClass.toString());
+					data.append(';');
+					param = new ObjectParam(index, arrayCount, data.toString());
 					break;
 				case 'Z':
 					// Boolean
@@ -100,8 +100,9 @@ public final class Descriptor {
 			this.parameters = EMPTY;
 			this.returnParam = parameters.get(0);
 		} else {
-			this.parameters = parameters.subList(0, parameters.size() - 1).toArray(EMPTY);
-			this.returnParam = parameters.get(parameters.size() - 1);
+			int end = parameters.size() - 1;
+			this.parameters = parameters.subList(0, end).toArray(EMPTY);
+			this.returnParam = parameters.get(end);
 		}
 	}
 
@@ -125,19 +126,10 @@ public final class Descriptor {
 		return parameters.length;
 	}
 
-	public void load(MethodVisitor mv, int index) {
-		if (parameters.length > 0)
-				parameters[index].load(mv);
-	}
-
 	public void loadAll(MethodVisitor mv) {
 		if (parameters.length > 0)
 			for (Param param : parameters)
 				param.load(mv);
-	}
-
-	public void equality(MethodVisitor mv) {
-		returnParam.equality(mv);
 	}
 
 	@Override

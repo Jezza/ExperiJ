@@ -12,7 +12,7 @@ import me.jezza.interfaces.Results;
  * @author Jezza
  */
 final class ExperimentResults extends ArrayList<Execution> {
-	private transient ImmutableResults immutableView;
+	private transient ImmutableView immutableView;
 
 	ExperimentResults(String experimentName) {
 		if (ExperiJ.DEBUG)
@@ -20,13 +20,13 @@ final class ExperimentResults extends ArrayList<Execution> {
 	}
 
 	public Results immutable() {
-		return immutableView != null ? immutableView : (immutableView = new ImmutableResults(this));
+		return immutableView != null ? immutableView : (immutableView = new ImmutableView(this));
 	}
 
-	private class ImmutableResults implements Results {
+	private static class ImmutableView implements Results {
 		private final List<Execution> results;
 
-		ImmutableResults(List<Execution> results) {
+		ImmutableView(List<Execution> results) {
 			this.results = results;
 		}
 
@@ -129,7 +129,7 @@ final class ExperimentResults extends ArrayList<Execution> {
 
 		@Override
 		public Results subList(int fromIndex, int toIndex) {
-			return new ImmutableResults(results.subList(fromIndex, toIndex));
+			return new ImmutableView(results.subList(fromIndex, toIndex));
 		}
 
 		@Override
@@ -148,8 +148,13 @@ final class ExperimentResults extends ArrayList<Execution> {
 		}
 
 		@Override
-		public boolean equals(Object obj) {
-			return results.equals(obj);
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+			ImmutableView that = (ImmutableView) o;
+			return results.equals(that.results);
 		}
 
 		@Override

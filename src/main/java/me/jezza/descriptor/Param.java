@@ -1,30 +1,19 @@
 package me.jezza.descriptor;
 
-import me.jezza.lib.Equality;
 import me.jezza.repackage.org.objectweb.asm.MethodVisitor;
 import me.jezza.repackage.org.objectweb.asm.Opcodes;
 
 /**
- * TODO: Revisit. These classes are really annoying, and kinda confusing...
- *
  * @author Jezza
  */
 public abstract class Param {
 	protected final int index;
-	protected final int arrayCount;
-	protected final int loadCode;
-	protected final int storeCode;
-	protected final int returnCode;
 	protected final String data;
 	protected final String equalitySignature;
 	protected final String stringSignature;
 
-	public Param(int index, int arrayCount, int loadCode, int returnCode, int storeCode, String data) {
+	public Param(int index, int arrayCount, String data) {
 		this.index = index;
-		this.arrayCount = arrayCount;
-		this.loadCode = loadCode;
-		this.storeCode = storeCode;
-		this.returnCode = returnCode;
 		if (arrayCount == 0) {
 			this.data = data;
 		} else {
@@ -34,24 +23,24 @@ public abstract class Param {
 			builder.append(data);
 			this.data = builder.toString();
 		}
-		equalitySignature = equalitySignature(data);
-		stringSignature = stringSignature(data);
+		equalitySignature = buildEqualitySignature(data);
+		stringSignature = buildStringSignature(data);
 	}
 
-	protected String equalitySignature(String data) {
+	protected String buildEqualitySignature(String data) {
 		return '(' + data + data + ")Z";
 	}
 
-	protected String stringSignature(String data) {
+	protected String buildStringSignature(String data) {
 		return '(' + data + ")Ljava/lang/String;";
 	}
 
-	public Param equality(MethodVisitor mv) {
-		mv.visitMethodInsn(Opcodes.INVOKESTATIC, Equality.INTERNAL_NAME, "equals", equalitySignature, false);
+	public Param invokeEquals(MethodVisitor mv) {
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "me/jezza/lib/Equality", "equals", equalitySignature, false);
 		return this;
 	}
 
-	public Param string(MethodVisitor mv) {
+	public Param invokeToString(MethodVisitor mv) {
 		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/String", "valueOf", stringSignature, false);
 		return this;
 	}
@@ -61,17 +50,11 @@ public abstract class Param {
 		return this;
 	}
 
-	public int loadCode() {
-		return loadCode;
-	}
+	public abstract int loadCode();
 
-	public int storeCode() {
-		return storeCode;
-	}
+	public abstract int storeCode();
 
-	public int returnCode() {
-		return returnCode;
-	}
+	public abstract int returnCode();
 
 	@Override
 	public String toString() {

@@ -8,6 +8,21 @@ import me.jezza.repackage.org.objectweb.asm.Opcodes;
  */
 public final class FloatParam extends Param {
 	public FloatParam(int index, int arrayCount) {
-		super(index, arrayCount, Opcodes.FLOAD, Opcodes.FRETURN, Opcodes.FSTORE, "F");
+		super(index, arrayCount, "F");
+	}
+
+	@Override
+	public int loadCode() {
+		return Opcodes.FLOAD;
+	}
+
+	@Override
+	public int returnCode() {
+		return Opcodes.FRETURN;
+	}
+
+	@Override
+	public int storeCode() {
+		return Opcodes.FSTORE;
 	}
 }
