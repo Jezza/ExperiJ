@@ -12,10 +12,10 @@ import me.jezza.repackage.org.objectweb.asm.Opcodes;
  */
 public abstract class Param {
 	private static final String EQUAL_SIGNATURE_FORMAT = "({}{})Z";
-	private static final String EQUAL_SIGNATURE = "(Ljava/lang/Object;Ljava/lang/Object;)Z";
+	protected static final String EQUAL_SIGNATURE = "(Ljava/lang/Object;Ljava/lang/Object;)Z";
 
 	private static final String STRING_VALUE_OF_SIGNATURE_FORMAT = "({})Ljava/lang/String;";
-	private static final String STRING_VALUE_OF_SIGNATURE = "(Ljava/lang/Object;)Ljava/lang/String;";
+	protected static final String STRING_VALUE_OF_SIGNATURE = "(Ljava/lang/Object;)Ljava/lang/String;";
 
 	protected final int index;
 	protected final int arrayCount;

@@ -15,13 +15,13 @@ public final class ObjectParam extends Param {
 
 	@Override
 	public Param invokeEquals(MethodVisitor mv) {
-		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "me/jezza/lib/Equality", "equals", "(Ljava/lang/Object;Ljava/lang/Object;)Z", false);
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "me/jezza/lib/Equality", "equals", Param.EQUAL_SIGNATURE, false);
 		return this;
 	}
 
 	@Override
 	public Param invokeValueOf(MethodVisitor mv) {
-		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/String", "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/String", "valueOf", Param.STRING_VALUE_OF_SIGNATURE, false);
 		return this;
 	}
 
