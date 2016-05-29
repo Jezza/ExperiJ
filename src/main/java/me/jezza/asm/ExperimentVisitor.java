@@ -138,7 +138,7 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 			// Load the array index that will be used
 			loadInt(i);
 			// Load the parameter, and call String.valueOf
-			desc.parameter(i).load(this).invokeToString(this);
+			desc.parameter(i).load(this).invokeValueOf(this);
 			visitInsn(AASTORE);
 		}
 		// Invoke
@@ -240,10 +240,21 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	public ExperimentVisitor compile(int resultIndex, int keyIndex) {
 		// Load the results variable
 		visitVarInsn(ALOAD, resultIndex);
-		// Load the equality key
+		// Load the execution key
 		visitVarInsn(LLOAD, keyIndex);
 		// Fire the compile method
 		mv.visitMethodInsn(INVOKEVIRTUAL, ExperimentContext.INTERNAL_NAME, "compile", "(J)V", false);
+		return this;
+	}
+
+	public ExperimentVisitor error(int resultIndex, int keyIndex, int errorIndex) {
+		// Load the results variable
+		visitVarInsn(ALOAD, resultIndex);
+		// Load the execution key
+		visitVarInsn(LLOAD, keyIndex);
+		// Load the throwable
+		visitVarInsn(ALOAD, errorIndex);
+		mv.visitMethodInsn(INVOKEVIRTUAL, ExperimentContext.INTERNAL_NAME, "error", "(JLjava/lang/Throwable;)V", false);
 		return this;
 	}
 }

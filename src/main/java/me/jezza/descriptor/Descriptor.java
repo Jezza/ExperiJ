@@ -1,7 +1,7 @@
 package me.jezza.descriptor;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 
 import me.jezza.descriptor.param.*;
@@ -24,13 +24,16 @@ public final class Descriptor {
 	private Descriptor(String desc, final String signature, final String[] exceptions, boolean staticAccess) {
 		this.signature = signature;
 		this.exceptions = exceptions;
+		if (desc == null)
+			throw new NullPointerException("Descriptor input string is null");
 		final char[] chars = desc.toCharArray();
 		final int length = chars.length;
 		if (length < 3 || chars[0] != '(')
 			throw new IllegalArgumentException("Illegal Descriptor.");
-		Param param;
+		Param param = null;
 		int arrayCount = 0;
-		List<Param> parameters = new LinkedList<>();
+		boolean closed = false;
+		List<Param> parameters = new ArrayList<>(4);
 		for (int expected, pos = 1; pos < length; pos = pos == expected ? pos + 1 : pos) {
 			char c = chars[pos];
 			expected = pos;
@@ -38,20 +41,26 @@ public final class Descriptor {
 			switch (c) {
 				case '[':
 					arrayCount++;
+					while (++pos < length) {
+						if (chars[pos] != '[')
+							break;
+						arrayCount++;
+					}
+					continue;
 				case ')':
+					if (closed)
+						throw new IllegalArgumentException("Multiple closing characters: " + desc);
+					closed = true;
 					continue;
 				case 'L':
 					// Object
-					StringBuilder data = new StringBuilder("L");
 					pos++;
-					while (pos < length) {
-						c = chars[pos++];
-						if (c == ';')
+					while (pos < length)
+						if (chars[pos++] == ';')
 							break;
-						data.append(c);
-					}
-					data.append(';');
-					param = new ObjectParam(index, arrayCount, data.toString());
+					param = new ObjectParam(index, arrayCount, new String(Arrays.copyOfRange(chars, expected, pos)));
+					// This value will be reset anyway, but we don't want to trigger the object code that's going to be executed next.
+					arrayCount = 0;
 					break;
 				case 'Z':
 					// Boolean
@@ -86,24 +95,26 @@ public final class Descriptor {
 					param = new CharParam(index, arrayCount);
 					break;
 				case 'V':
-					param = new VoidParam();
+					if (arrayCount > 0)
+						throw new IllegalStateException("Void was declared with an array. This makes no sense.");
+					param = new VoidParam(index);
 					break;
 				default:
 					throw new UnsupportedOperationException("Unknown Descriptor Byte: " + c);
 			}
-			parameters.add(param);
+			// Make sure it's not an object already, AND if it should be an array.
+			if (c != 'L' && arrayCount > 0)
+				param = new ObjectParam(index, arrayCount, String.valueOf(c));
+			if (!closed)
+				parameters.add(param);
 			arrayCount = 0;
 		}
-		if (parameters.isEmpty())
-			throw new IllegalArgumentException("");
-		if (parameters.size() == 1) {
-			this.parameters = EMPTY;
-			this.returnParam = parameters.get(0);
-		} else {
-			int end = parameters.size() - 1;
-			this.parameters = parameters.subList(0, end).toArray(EMPTY);
-			this.returnParam = parameters.get(end);
-		}
+		if (!closed)
+			throw new IllegalArgumentException("Invalid descriptor (Not closed): " + desc);
+		if (param == null)
+			throw new IllegalArgumentException("Invalid descriptor (Invalid return type): " + desc);
+		this.returnParam = param;
+		this.parameters = parameters.isEmpty() ? EMPTY : parameters.toArray(EMPTY);
 	}
 
 	public Param returnPart() {

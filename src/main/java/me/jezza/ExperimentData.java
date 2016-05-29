@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * TODO revisit: I either want to remove the method name parameter in a couple of methods, or actually make use of it.
+ *
  * @author Jezza
  */
 public final class ExperimentData {
@@ -49,17 +51,25 @@ public final class ExperimentData {
 		measurements[active++].equal = equal;
 	}
 
+	public void error(Throwable t) {
+		Measurement measurement = measurements[active];
+		measurement.time = ExperiJ.ERRORED;
+		measurement.t = t;
+		measurement.equal = false;
+	}
+
 	public void compile(ExperimentResults results) {
 		Map<String, ExperimentTime> experiments = new HashMap<>();
 		for (Measurement s : measurements)
-			experiments.put(s.methodName, new ExperimentTime(s.methodName, s.time, s.equal));
+			experiments.put(s.methodName, new ExperimentTime(s.methodName, s.time, s.equal, s.t));
 		results.add(new Execution(experimentName, params, new ControlTime(controlMethod, control), experiments));
 	}
 
 	private static class Measurement {
-		long time = -1;
+		long time = ExperiJ.UNSET;
 		String methodName;
 		boolean equal;
+		private Throwable t;
 	}
 }
 

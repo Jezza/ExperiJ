@@ -67,7 +67,7 @@ public final class ClassExperiment implements Opcodes {
 		this.className = className;
 		this.name = experimentName;
 		this.staticAccess = staticAccess;
-		this.entryPoint = format(ExperiJ.HIDDEN_EXPERIMENT_ENTRY_POINT_FORMAT, experimentName);
+		this.entryPoint = format(ExperiJ.ENTRY_POINT_FORMAT, experimentName);
 		methodNames = new ArrayList<>(3);
 		System.out.println("Registering: " + experimentName);
 	}
@@ -225,11 +225,11 @@ public final class ClassExperiment implements Opcodes {
 	}
 
 	public ClassExperiment invokeControl(MethodVisitor mv) {
-		return invoke(mv, format(ExperiJ.RENAME_METHOD_FORMAT, controlMethod));
+		return invoke(mv, format(ExperiJ.RENAMED_METHOD_FORMAT, controlMethod));
 	}
 
 	public ClassExperiment invokeExperiment(MethodVisitor mv, int index) {
-		return invoke(mv, format(ExperiJ.RENAME_METHOD_FORMAT, methodNames.get(index)));
+		return invoke(mv, format(ExperiJ.RENAMED_METHOD_FORMAT, methodNames.get(index)));
 	}
 
 	private ClassExperiment invoke(MethodVisitor mv, String methodName) {

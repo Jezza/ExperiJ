@@ -40,8 +40,7 @@ public final class Execution {
 	@Override
 	public String toString() {
 		StringBuilder results = new StringBuilder();
-		results.append(experimentName);
-		results.append('(');
+		results.append(experimentName).append('(');
 		// Append all of the parameters.
 		List<String> params = this.params;
 		if (!params.isEmpty())
@@ -50,14 +49,21 @@ public final class Execution {
 
 		// Append the control time.
 		ControlTime control = this.control;
-		results.append(control.methodName()).append(':').append(control.time());
-		results.append(',');
+		results.append(control.methodName()).append(':').append(control.time()).append('|');
 		// Append the experiments.
 		Map<String, ExperimentTime> experiments = this.experiments;
 		for (Entry<String, ExperimentTime> entry : experiments.entrySet()) {
 			ExperimentTime exp = entry.getValue();
-			results.append(exp.methodName()).append(':').append(exp.time()).append(':').append(exp.equal());
-			results.append(',');
+			results.append(exp.methodName()).append(':');
+			long time = exp.time();
+			if (time == ExperiJ.ERRORED) {
+				results.append("Errored=(").append(exp.caughtError().getMessage()).append("\")");
+			} else if (time == ExperiJ.UNSET) {
+				results.append("Unfinished");
+			} else {
+				results.append(time);
+			}
+			results.append(':').append(exp.equal()).append('|');
 		}
 		results.deleteCharAt(results.length() - 1);
 		return results.toString();

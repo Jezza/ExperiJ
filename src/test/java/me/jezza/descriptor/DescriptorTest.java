@@ -1,41 +1,12 @@
 package me.jezza.descriptor;
 
-import java.util.Random;
-
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Jezza
  */
-public class DescriptorTest {
-
-	private static final String[] PARAMETERS = {
-			"Ljava/lang/String;", "Z", "B", "S", "I", "F", "D", "J", "C"
-	};
-
-	private static final String[] RETURN_VALUES = {
-			"Ljava/lang/String;", "Z", "B", "S", "I", "F", "D", "J", "C", "V"
-	};
-
-	private static final Random random = new Random();
-
-	private Descriptor randomDescriptor() {
-		StringBuilder descriptor = new StringBuilder("(");
-		// Random length, at least 16 parameters, and no more than 32.
-		int length = 16 + random.nextInt(16);
-		for (int i = 0; i < length; i++) {
-			while (random.nextFloat() > 0.92F)
-				descriptor.append('[');
-			descriptor.append(PARAMETERS[random.nextInt(PARAMETERS.length)]);
-		}
-		descriptor.append(')');
-		while (random.nextFloat() > 0.92F)
-			descriptor.append('[');
-		descriptor.append(RETURN_VALUES[random.nextInt(RETURN_VALUES.length)]);
-		return Descriptor.from(descriptor.toString(), null, null, false);
-	}
-
+public class DescriptorTest extends AbstractTest {
 	@Test
 	public void testReturnPart() throws Exception {
 	}
@@ -115,10 +86,77 @@ public class DescriptorTest {
 	}
 
 	@Test
-	public void testFrom() throws Exception {
-		Descriptor descriptor = randomDescriptor();
-		Assert.assertTrue(descriptor != null);
-		Assert.assertTrue(descriptor.signature() == null);
-		Assert.assertTrue(descriptor.exceptions() == null);
+		public void testFrom() throws Exception {
+		// The first couple just test the random descriptor method, making sure that nothing broke.
+		Assert.assertTrue(randomDescriptor() != null);
+		Descriptor desc = randomDescriptor();
+		Assert.assertTrue(desc.toString(), desc.signature() == null);
+		Assert.assertTrue(desc.toString(), desc.exceptions() == null);
+
+		desc = randomDescriptor(64, 1F);
+		Assert.assertFalse(desc.toString(), desc.toString().contains("["));
+
+		// Actually testing the descriptor parsing.
+		desc = randomDescriptor(1);
+		Assert.assertTrue(desc.toString(), desc.parameterCount() == 0);
+		Assert.assertTrue(desc.toString(), desc.returnPart().index == 1);
+
+		desc = randomDescriptor(1, true);
+		Assert.assertTrue(desc.toString(), desc.parameterCount() == 0);
+		Assert.assertTrue(desc.toString(), desc.returnPart().index == 0);
+
+		desc = randomDescriptor(2);
+		Assert.assertTrue(desc.toString(), desc.parameterCount() == 1);
+		Assert.assertTrue(desc.toString(), desc.returnPart().index == 2);
+
+		desc = randomDescriptor(2, true);
+		Assert.assertTrue(desc.toString(), desc.parameterCount() == 1);
+		Assert.assertTrue(desc.toString(), desc.returnPart().index == 1);
+
+		desc = randomDescriptor(2, -1F);
+		Assert.assertTrue(desc.toString(), desc.parameterCount() == 1);
+		Assert.assertTrue(desc.toString(), desc.returnPart().index == 2);
+
+		desc = randomDescriptor(2, -1F, true);
+		Assert.assertTrue(desc.toString(), desc.parameterCount() == 1);
+		Assert.assertTrue(desc.toString(), desc.returnPart().index == 1);
+	}
+
+	@Test
+	public void testFromExceptions() throws Exception {
+		try {
+			Descriptor.from(null);
+			throw new AssertionError("Descriptor constructor didn't throw a NullPointerException on null input."); // If this happens, something has gone wrong.
+		} catch (NullPointerException e) {
+			Assert.assertTrue("Descriptor input string is null".equals(e.getMessage()));
+		}
+
+		try {
+			Descriptor.from("");
+			throw new AssertionError("Descriptor constructor didn't throw a IllegalArgumentException on invalid input."); // If this happens, something has gone wrong.
+		} catch (IllegalArgumentException e) {
+			Assert.assertTrue("Illegal Descriptor.".equals(e.getMessage()));
+		}
+
+		try {
+			Descriptor.from(")");
+			throw new AssertionError("Descriptor constructor didn't throw a IllegalArgumentException on invalid input."); // If this happens, something has gone wrong.
+		} catch (IllegalArgumentException e) {
+			Assert.assertTrue("Illegal Descriptor.".equals(e.getMessage()));
+		}
+
+		try {
+			Descriptor.from("(  ");
+			throw new AssertionError("Descriptor constructor didn't throw a UnsupportedOperationException on invalid input."); // If this happens, something has gone wrong.
+		} catch (UnsupportedOperationException e) {
+			Assert.assertTrue("Unknown Descriptor Byte:  ".equals(e.getMessage()));
+		}
+
+//		try {
+//			Descriptor.from("(ZZ");
+//			throw new AssertionError("Descriptor constructor didn't throw a UnsupportedOperationException on invalid input."); // If this happens, something has gone wrong.
+//		} catch (UnsupportedOperationException e) {
+//			Assert.assertTrue("Unknown Descriptor Byte:  ".equals(e.getMessage()));
+//		}
 	}
 }

@@ -71,10 +71,21 @@ public final class ExperimentContext {
 			System.out.println("[Reporting Equality]:" + experimentName + ':' + methodName + ':' + key + ':' + equal);
 	}
 
+	public void error(long key, Throwable t) {
+		ExperimentData data = activeData.get(key);
+		if (data == null)
+			throw new IllegalArgumentException("ExperimentContext key is invalid!");
+		data.error(t);
+		if (ExperiJ.DEBUG)
+			System.out.println("[Errored]:" + experimentName);
+	}
+
 	public void compile(long key) {
 		ExperimentData data = activeData.remove(key);
 		if (data == null)
 			throw new IllegalArgumentException("ExperimentContext key is invalid!");
 		data.compile(results);
+		if (ExperiJ.DEBUG)
+			System.out.println("[Compiling]:" + experimentName);
 	}
 }

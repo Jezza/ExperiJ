@@ -92,7 +92,7 @@ public final class ExperiJMethodVisitor extends MethodVisitor implements Opcodes
 			mv.visitEnd();
 
 			// Write the original method, but with a new name, so we can call upon it later.
-			method = experiment.createMethod(cv, format(ExperiJ.RENAME_METHOD_FORMAT, methodName));
+			method = experiment.createMethod(cv, format(ExperiJ.RENAMED_METHOD_FORMAT, methodName));
 		}
 		super.visitCode();
 	}

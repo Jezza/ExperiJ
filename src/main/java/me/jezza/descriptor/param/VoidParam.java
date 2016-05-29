@@ -9,8 +9,8 @@ import me.jezza.repackage.org.objectweb.asm.Opcodes;
  */
 public final class VoidParam extends Param {
 
-	public VoidParam() {
-		super(0, 0, "V");
+	public VoidParam(int index) {
+		super(index, 0, "V");
 	}
 
 	@Override
@@ -34,7 +34,7 @@ public final class VoidParam extends Param {
 	}
 
 	@Override
-	public Param invokeToString(MethodVisitor mv) {
+	public Param invokeValueOf(MethodVisitor mv) {
 		throw new IllegalStateException("A void declaration is attempting to be string'd. This makes no sense.");
 	}
 

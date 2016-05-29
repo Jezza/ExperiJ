@@ -25,7 +25,7 @@ public final class ExperiJClassTransformer implements ClassFileTransformer {
 		} catch (Exception e) {
 			// Don't ask.
 			System.out.flush();
-			System.err.println("ExperiJ failed to initialise with \"" + className.replace('/', '.') + "\" because of the following reason(s):");
+			System.err.println("Failed to initialise ExperiJ in \"" + className.replace('/', '.') + "\" because of the following reason(s):");
 			e.printStackTrace();
 			System.err.flush();
 			System.exit(-1);

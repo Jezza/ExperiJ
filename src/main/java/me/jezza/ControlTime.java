@@ -3,7 +3,7 @@ package me.jezza;
 /**
  * @author Jezza
  */
-public class ControlTime {
+public final class ControlTime {
 	private final String methodName;
 	private final long time;
 

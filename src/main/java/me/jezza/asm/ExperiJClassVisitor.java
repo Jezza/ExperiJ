@@ -8,6 +8,7 @@ import java.util.Map;
 import me.jezza.ExperiJ;
 import me.jezza.descriptor.Descriptor;
 import me.jezza.repackage.org.objectweb.asm.ClassVisitor;
+import me.jezza.repackage.org.objectweb.asm.Label;
 import me.jezza.repackage.org.objectweb.asm.MethodVisitor;
 import me.jezza.repackage.org.objectweb.asm.Opcodes;
 
@@ -63,6 +64,13 @@ public final class ExperiJClassVisitor extends ClassVisitor implements Opcodes {
 
 			// Begin running experiment code
 			for (int i = 0; i < experiment.size(); i++) {
+				Label start = new Label();
+				Label end = new Label();
+				Label handler = new Label();
+				// Start try-catch block
+				ev.visitTryCatchBlock(start, end, handler, "java/lang/Throwable");
+				// Mark the start of the try-catch block.
+				ev.visitLabel(start);
 				// Start experiment measurement
 				ev.startExperiment(i, resultIndex, keyIndex);
 				// Load 'this', and all of the method parameters, and fire the experiment method
@@ -73,6 +81,16 @@ public final class ExperiJClassVisitor extends ClassVisitor implements Opcodes {
 				ev.stopExperiment(i, resultIndex, keyIndex);
 				// Report the control <-> experimental equality
 				ev.reportEquality(resultIndex, keyIndex, i, controlMemoryIndex, experimentMemoryIndex);
+//				ev..visitJumpInsn(GOTO, l3);
+				ev.visitJumpInsn(GOTO, end);
+				// Start the handler block.
+				ev.visitLabel(handler);
+				// Store the throwable in the locals.
+				int errorIndex = ev.opcode(ASTORE, 5);
+				// Invoke error message on the results.
+				ev.error(resultIndex, keyIndex, errorIndex);
+				// End of try block
+				ev.visitLabel(end);
 			}
 			// Compile the data, and insert it into the context.
 			ev.compile(resultIndex, keyIndex);

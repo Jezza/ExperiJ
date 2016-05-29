@@ -1,6 +1,7 @@
 package me.jezza.descriptor.param;
 
 import me.jezza.descriptor.Param;
+import me.jezza.repackage.org.objectweb.asm.MethodVisitor;
 import me.jezza.repackage.org.objectweb.asm.Opcodes;
 
 /**
@@ -13,13 +14,15 @@ public final class ObjectParam extends Param {
 	}
 
 	@Override
-	protected String buildEqualitySignature(String data) {
-		return "(Ljava/lang/Object;Ljava/lang/Object;)Z";
+	public Param invokeEquals(MethodVisitor mv) {
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "me/jezza/lib/Equality", "equals", "(Ljava/lang/Object;Ljava/lang/Object;)Z", false);
+		return this;
 	}
 
 	@Override
-	protected String buildStringSignature(String data) {
-		return "(Ljava/lang/Object;)Ljava/lang/String;";
+	public Param invokeValueOf(MethodVisitor mv) {
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/String", "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
+		return this;
 	}
 
 	@Override

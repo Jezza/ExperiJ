@@ -1,47 +1,49 @@
 package me.jezza.descriptor;
 
+import static me.jezza.lib.Strings.format;
+
 import me.jezza.repackage.org.objectweb.asm.MethodVisitor;
 import me.jezza.repackage.org.objectweb.asm.Opcodes;
 
 /**
+ * TODO Move the array logic into here, so we only have one {@link Param} class, instead of different ones for all types.
+ *
  * @author Jezza
  */
 public abstract class Param {
+	private static final String EQUAL_SIGNATURE_FORMAT = "({}{})Z";
+	private static final String EQUAL_SIGNATURE = "(Ljava/lang/Object;Ljava/lang/Object;)Z";
+
+	private static final String STRING_VALUE_OF_SIGNATURE_FORMAT = "({})Ljava/lang/String;";
+	private static final String STRING_VALUE_OF_SIGNATURE = "(Ljava/lang/Object;)Ljava/lang/String;";
+
 	protected final int index;
+	protected final int arrayCount;
 	protected final String data;
-	protected final String equalitySignature;
-	protected final String stringSignature;
 
 	public Param(int index, int arrayCount, String data) {
 		this.index = index;
+		this.arrayCount = arrayCount;
 		if (arrayCount == 0) {
 			this.data = data;
 		} else {
-			StringBuilder builder = new StringBuilder(arrayCount + data.length());
+			int length = data.length();
+			char[] c = new char[arrayCount + length];
 			for (int i = 0; i < arrayCount; i++)
-				builder.append('[');
-			builder.append(data);
-			this.data = builder.toString();
+				c[i] = '[';
+			for (int i = 0; i < length; i++)
+				c[arrayCount + i] = data.charAt(i);
+			this.data = new String(c);
 		}
-		equalitySignature = buildEqualitySignature(data);
-		stringSignature = buildStringSignature(data);
-	}
-
-	protected String buildEqualitySignature(String data) {
-		return '(' + data + data + ")Z";
-	}
-
-	protected String buildStringSignature(String data) {
-		return '(' + data + ")Ljava/lang/String;";
 	}
 
 	public Param invokeEquals(MethodVisitor mv) {
-		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "me/jezza/lib/Equality", "equals", equalitySignature, false);
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "me/jezza/lib/Equality", "equals", format(EQUAL_SIGNATURE_FORMAT, data, data), false);
 		return this;
 	}
 
-	public Param invokeToString(MethodVisitor mv) {
-		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/String", "valueOf", stringSignature, false);
+	public Param invokeValueOf(MethodVisitor mv) {
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/String", "valueOf", format(STRING_VALUE_OF_SIGNATURE_FORMAT, data), false);
 		return this;
 	}
 
