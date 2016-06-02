@@ -75,7 +75,7 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		return memoryIndex;
 	}
 
-	private void loadInt(int value) {
+	public void loadInt(int value) {
 		switch (value) {
 			case 1:
 				visitInsn(ICONST_1);
@@ -101,6 +101,10 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 					visitLdcInsn(value);
 				}
 		}
+	}
+
+	public boolean voidMethod() {
+		return experiment.returnCode() == RETURN;
 	}
 
 	/**
@@ -226,12 +230,20 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		visitVarInsn(LLOAD, keyIndex);
 		// Load the method name
 		visitLdcInsn(experiment.names(experimentIndex));
-		// Load the initial control result, and this experiment's result.
-		int loadCode = experiment.loadCode();
-		visitVarInsn(loadCode, controlMemoryIndex);
-		visitVarInsn(loadCode, experimentMemoryIndex);
-		// Dynamic equality checks.
-		experiment.invokeEquals(mv);
+		// We need to check if it's just a void method, because then we can't compare the results.
+		if (voidMethod()) {
+			// Load true, because it's a void method.
+			visitInsn(ICONST_1);
+		} else {
+			// Load the initial control result, and this experiment's result.
+			int loadCode = experiment.loadCode();
+			// Load the control value onto the stack
+			visitVarInsn(loadCode, controlMemoryIndex);
+			// Load the experiment result onto the stack
+			visitVarInsn(loadCode, experimentMemoryIndex);
+			// Dynamic equality checks.
+			experiment.invokeEquals(mv);
+		}
 		// Fire the reporting method
 		mv.visitMethodInsn(INVOKEVIRTUAL, ExperimentContext.INTERNAL_NAME, "reportEquality", "(JLjava/lang/String;Z)V", false);
 		return this;

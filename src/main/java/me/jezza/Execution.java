@@ -48,8 +48,7 @@ public final class Execution {
 		results.append("):");
 
 		// Append the control time.
-		ControlTime control = this.control;
-		results.append(control.methodName()).append(':').append(control.time()).append('|');
+		results.append(this.control).append('|');
 		// Append the experiments.
 		Map<String, ExperimentTime> experiments = this.experiments;
 		for (Entry<String, ExperimentTime> entry : experiments.entrySet()) {

@@ -58,7 +58,7 @@ public final class ExperiJClassVisitor extends ClassVisitor implements Opcodes {
 			// Load 'this', and all of the method's parameters, and fire the control method.
 			ev.loadThis().loadParameters().invokeControl();
 			// Store the result locally with the offset of 1 as results are taking the first index
-			int controlMemoryIndex = ev.store(3);
+			int controlMemoryIndex = ev.voidMethod() ? -1 : ev.store(3);
 			// Stop the measurement for the control, with the result index
 			ev.stopControl(resultIndex, keyIndex);
 
@@ -76,12 +76,12 @@ public final class ExperiJClassVisitor extends ClassVisitor implements Opcodes {
 				// Load 'this', and all of the method parameters, and fire the experiment method
 				ev.loadThis().loadParameters().invokeExperiment(i);
 				// Store the result, which is the experiment index + the free index after the control result
-				int experimentMemoryIndex = ev.store(4);
+				int experimentMemoryIndex = ev.voidMethod() ? -1 : ev.store(4);
 				// Stop the experiment measurement
 				ev.stopExperiment(i, resultIndex, keyIndex);
 				// Report the control <-> experimental equality
 				ev.reportEquality(resultIndex, keyIndex, i, controlMemoryIndex, experimentMemoryIndex);
-//				ev..visitJumpInsn(GOTO, l3);
+				// Jump to the end of the try-catch block.
 				ev.visitJumpInsn(GOTO, end);
 				// Start the handler block.
 				ev.visitLabel(handler);
@@ -89,13 +89,15 @@ public final class ExperiJClassVisitor extends ClassVisitor implements Opcodes {
 				int errorIndex = ev.opcode(ASTORE, 5);
 				// Invoke error message on the results.
 				ev.error(resultIndex, keyIndex, errorIndex);
-				// End of try block
+				// End of try-catch block
 				ev.visitLabel(end);
 			}
 			// Compile the data, and insert it into the context.
 			ev.compile(resultIndex, keyIndex);
-			// Load the control's return value, and return it.
-			ev.load(controlMemoryIndex);
+			if (!ev.voidMethod()) {
+				// Load the control's return value, and return it.
+				ev.load(controlMemoryIndex);
+			}
 			// End specific experiment code
 			ev.visitInsn(experiment.returnCode());
 			// These are completely ignored, because we configured it to compute the maximums automatically.

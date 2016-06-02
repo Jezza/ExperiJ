@@ -30,21 +30,21 @@ public final class ExperimentData {
 		control = System.nanoTime();
 	}
 
-	public void stopControl() {
-		control = System.nanoTime() - control;
+	public void stopControl(long end) {
+		control = end - control;
 
 	}
 
 	public void start(String methodName) {
 		Measurement measurement = new Measurement();
 		measurement.methodName = methodName;
-		measurement.time = System.nanoTime();
 		measurements[active] = measurement;
+		measurement.time = System.nanoTime();
 	}
 
-	public void stop(String methodName) {
+	public void stop(String methodName, long end) {
 		Measurement measurement = measurements[active];
-		measurement.time = System.nanoTime() - measurement.time;
+		measurement.time = end - measurement.time;
 	}
 
 	public void equality(String methodName, boolean equal) {

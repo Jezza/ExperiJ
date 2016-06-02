@@ -36,10 +36,11 @@ public final class ExperimentContext {
 	}
 
 	public void stopControl(long key) {
+		long end = System.nanoTime();
 		ExperimentData data = activeData.get(key);
 		if (data == null)
 			throw new IllegalArgumentException("ExperimentContext key is invalid!");
-		data.stopControl();
+		data.stopControl(end);
 		if (ExperiJ.DEBUG)
 			System.out.println("[Stopping Control]:" + experimentName + ':' + controlMethod + ':' + key);
 	}
@@ -54,10 +55,11 @@ public final class ExperimentContext {
 	}
 
 	public void stop(long key, String methodName) {
+		long end = System.nanoTime();
 		ExperimentData data = activeData.get(key);
 		if (data == null)
 			throw new IllegalArgumentException("ExperimentContext key is invalid!");
-		data.stop(methodName);
+		data.stop(methodName, end);
 		if (ExperiJ.DEBUG)
 			System.out.println("[Stopping Experiment]:" + experimentName + ':' + methodName + ':' + key);
 	}

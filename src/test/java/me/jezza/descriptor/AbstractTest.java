@@ -54,8 +54,8 @@ public abstract class AbstractTest {
 	public static Descriptor randomDescriptor(int length, float arrayPercentage, boolean staticAccess) {
 		StringBuilder descriptor = new StringBuilder("(");
 		int arrayCount = 0;
-		if (length - 1 > 0) {
-			for (int i = 0; i < length - 1; i++) {
+		if (length > 0) {
+			for (int i = 0; i < length; i++) {
 				while (random.nextFloat() > arrayPercentage && arrayCount++ < MAX_ARRAY_SIZE)
 					descriptor.append('[');
 				descriptor.append(PARAMETERS[random.nextInt(PARAMETERS.length)]);

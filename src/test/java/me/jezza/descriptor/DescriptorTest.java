@@ -29,7 +29,8 @@ public class DescriptorTest extends AbstractTest {
 
 	@Test
 	public void testParameterCount() throws Exception {
-		Assert.assertTrue(randomDescriptor().parameterCount() >= 16);
+		Descriptor descriptor = randomDescriptor();
+		Assert.assertTrue(descriptor.toString(), descriptor.parameterCount() >= 16);
 
 		String input = "(Ljava/lang/String;Ljava/lang/String;ZDZFC[BCJLjava/lang/String;ZJBFJD[FIZJS)D";
 		Descriptor from = Descriptor.from(input);
@@ -98,28 +99,28 @@ public class DescriptorTest extends AbstractTest {
 
 		// Actually testing the descriptor parsing.
 		desc = randomDescriptor(1);
-		Assert.assertTrue(desc.toString(), desc.parameterCount() == 0);
-		Assert.assertTrue(desc.toString(), desc.returnPart().index == 1);
+		Assert.assertTrue(desc.toString(), desc.parameterCount() == 1);
+		Assert.assertTrue(desc.toString(), desc.returnPart().index == 2);
 
 		desc = randomDescriptor(1, true);
-		Assert.assertTrue(desc.toString(), desc.parameterCount() == 0);
-		Assert.assertTrue(desc.toString(), desc.returnPart().index == 0);
+		Assert.assertTrue(desc.toString(), desc.parameterCount() == 1);
+		Assert.assertTrue(desc.toString(), desc.returnPart().index == 1);
 
 		desc = randomDescriptor(2);
-		Assert.assertTrue(desc.toString(), desc.parameterCount() == 1);
-		Assert.assertTrue(desc.toString(), desc.returnPart().index == 2);
+		Assert.assertTrue(desc.toString(), desc.parameterCount() == 2);
+		Assert.assertTrue(desc.toString(), desc.returnPart().index == 3);
 
 		desc = randomDescriptor(2, true);
-		Assert.assertTrue(desc.toString(), desc.parameterCount() == 1);
-		Assert.assertTrue(desc.toString(), desc.returnPart().index == 1);
-
-		desc = randomDescriptor(2, -1F);
-		Assert.assertTrue(desc.toString(), desc.parameterCount() == 1);
+		Assert.assertTrue(desc.toString(), desc.parameterCount() == 2);
 		Assert.assertTrue(desc.toString(), desc.returnPart().index == 2);
 
+		desc = randomDescriptor(2, -1F);
+		Assert.assertTrue(desc.toString(), desc.parameterCount() == 2);
+		Assert.assertTrue(desc.toString(), desc.returnPart().index == 3);
+
 		desc = randomDescriptor(2, -1F, true);
-		Assert.assertTrue(desc.toString(), desc.parameterCount() == 1);
-		Assert.assertTrue(desc.toString(), desc.returnPart().index == 1);
+		Assert.assertTrue(desc.toString(), desc.parameterCount() == 2);
+		Assert.assertTrue(desc.toString(), desc.returnPart().index == 2);
 	}
 
 	@Test
