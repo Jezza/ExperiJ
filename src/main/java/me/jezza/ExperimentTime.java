@@ -1,6 +1,6 @@
 package me.jezza;
 
-import me.jezza.lib.Strings;
+import static me.jezza.lib.Strings.format;
 
 /**
  * @author Jezza
@@ -64,6 +64,11 @@ public final class ExperimentTime {
 
 	@Override
 	public String toString() {
-		return Strings.format(t == null ? "{}:{}:{}" : "{}:{}:{}:{}", methodName, Long.toString(time), Boolean.toString(equal), t);
+		long time = this.time;
+		if (time == ExperiJ.ERRORED)
+			return format("{}:Errored=(\"{}\")", methodName, t.getMessage());
+		if (time == ExperiJ.UNSET)
+			return format("{}:Unfinished", methodName);
+		return format("{}:{}:{}", methodName, Long.toString(time), Boolean.toString(equal));
 	}
 }
