@@ -1,20 +1,21 @@
 apply plugin: 'java'
 
-project.version = "0.1"
+project.version = "0.2"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    // compile 'org.ow2.asm:asm-all:5.1'
-    // compile 'com.google.guava:guava:19.0-rc2'
-    // compile 'com.google.code.gson:gson:2.4'
+	testCompile 'junit:junit:4.12'
 }
 
 jar {
 	version = project.version
 	classifier = "dev"
+	manifest {
+		attributes("Manifest-Version": "1.0", "Agent-Class": "me.jezza.ExperiJ", "Premain-Class": "me.jezza.ExperiJ")
+	}
 }
 
 // Source jar
