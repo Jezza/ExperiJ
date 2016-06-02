@@ -67,15 +67,8 @@ public final class ExperiJ {
 
 	public static void main(String[] args) {
 		try {
-			System.out.println(Test.integerToBinaryString(1));
-			System.out.println(Test.integerToBinaryString(2));
-			System.out.println(Test.integerToBinaryString(4));
-			System.out.println(Test.integerToBinaryString(8));
-			System.out.println(Test.integerToBinaryString(16));
-			System.out.println(Test.integerToBinaryString(32));
-			System.out.println(Test.integerToBinaryString(64));
-			System.out.println(Test.integerToBinaryString(128));
-			System.out.println(Test.integerToBinaryString(256));
+			for (int i = 0; i < 16; i++)
+				System.out.println(Test.integerToBinaryString(1 << i));
 		} catch (Throwable t) {
 			t.printStackTrace();
 		}
@@ -85,7 +78,7 @@ public final class ExperiJ {
 			System.out.println(method.toGenericString());
 
 		System.out.println("--Results--");
-		System.out.println(Test.TEST_THING);
+		System.out.println(Test.TEST_THING.toString().replaceAll("[|,]", "\n").replaceAll("[ \\[\\]]", ""));
 	}
 
 	public static Results results(String experimentName) {
