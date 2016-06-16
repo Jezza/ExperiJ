@@ -1,5 +1,7 @@
 package me.jezza.lib;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -8,6 +10,7 @@ import java.util.function.Function;
 public final class Strings {
 	private static final char[] OBJ_REP_CHARS = "{}".toCharArray();
 	private static final String SAFE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNPPQRSTUVWXYZ$_1234567890";
+	private static final String[] EMPTY = new String[0];
 
 	private Strings() {
 		throw new IllegalStateException();
@@ -41,16 +44,13 @@ public final class Strings {
 	 * If you want to change anything in this method, talk to Jeremy or Dirk about it first!</i>
 	 */
 	public static String format(final String original, final Object... objects) {
-		if (original == null) {
+		if (original == null)
 			return null;
-		}
 		int length = original.length();
-		if (length == 0) {
+		if (length == 0)
 			return "";
-		}
-		if (objects == null || objects.length == 0) {
+		if (objects == null || objects.length == 0)
 			return original;
-		}
 
 		int objectLength = objects.length;
 		int calculatedLength = length;
@@ -75,13 +75,11 @@ public final class Strings {
 		original.getChars(0, length, result, 0);
 		for (int i = 0, index = 0, end, paramLength; i < objectLength; i++) {
 			index = indexOf(result, 0, length, rep, 0, repLength, index);
-			if (index < 0) {
+			if (index < 0)
 				return new String(result, 0, length);
-			}
 			end = index + repLength;
-			if (end > length) {
+			if (end > length)
 				end = length;
-			}
 			param = params[i].toCharArray();
 			paramLength = param.length;
 			// Shifts the entire result array down to fit the parameter.
@@ -101,9 +99,9 @@ public final class Strings {
 	 * Think of it as lining up the two arrays, and returning the index that it matches.
 	 * Or just think of it as an indexOf...
 	 *
-	 * @param   source       - the characters being searched.
-	 * @param   target       - the characters being searched for.
-	 * @param   fromIndex    - the index to begin searching from.
+	 * @param source    - the characters being searched.
+	 * @param target    - the characters being searched for.
+	 * @param fromIndex - the index to begin searching from.
 	 * @return - the index that the target array was found at within the source array
 	 */
 	public static int indexOf(final char[] source, final char[] target, final int fromIndex) {
@@ -114,45 +112,39 @@ public final class Strings {
 	 * Performs an indexOf search on a char array, with another char array.
 	 * Think of it as lining up the two arrays, and returning the index that it matches.
 	 *
-	 * @param   source       - the characters being searched.
-	 * @param   sourceOffset - offset of the source string.
-	 * @param   sourceCount  - count of the source string.
-	 * @param   target       - the characters being searched for.
-	 * @param   targetOffset - offset of the target string.
-	 * @param   targetCount  - count of the target string.
-	 * @param   fromIndex    - the index to begin searching from.
+	 * @param source       - the characters being searched.
+	 * @param sourceOffset - offset of the source string.
+	 * @param sourceCount  - count of the source string.
+	 * @param target       - the characters being searched for.
+	 * @param targetOffset - offset of the target string.
+	 * @param targetCount  - count of the target string.
+	 * @param fromIndex    - the index to begin searching from.
 	 * @return - the index that the target array was found at within the source array
 	 */
 	public static int indexOf(final char[] source, final int sourceOffset, final int sourceCount, final char[] target, final int targetOffset, final int targetCount, int fromIndex) {
-		if (fromIndex >= sourceCount) {
+		if (fromIndex >= sourceCount)
 			return targetCount == 0 ? sourceCount : -1;
-		}
-		if (fromIndex < 0) {
+		if (fromIndex < 0)
 			fromIndex = 0;
-		}
-		if (targetCount == 0) {
+		if (targetCount == 0)
 			return fromIndex;
-		}
 
 		final char first = target[targetOffset];
 		final int max = sourceOffset + sourceCount - targetCount;
 
 		for (int i = sourceOffset + fromIndex; i <= max; i++) {
 			// Look for first character.
-			if (source[i] != first) {
-				while (++i <= max && source[i] != first) {
-				}
-			}
+			if (source[i] != first)
+				while (++i <= max && source[i] != first) ;
 
 			// Found first character, now look at the rest of v2
 			if (i <= max) {
 				int j = i + 1;
 				final int end = j + targetCount - 1;
-				for (int k = targetOffset + 1; j < end && source[j] == target[k]; j++, k++) {
-				}
-				if (j == end) {
+				for (int k = targetOffset + 1; j < end && source[j] == target[k]; j++, k++) ;
+
+				if (j == end)
 					return i - sourceOffset; // Found whole string.
-				}
 			}
 		}
 		return -1;
@@ -160,22 +152,22 @@ public final class Strings {
 
 	/**
 	 * Formats a chunk of text, replacing defined tokens by the start and end, and passes the value off to the given function.
-	 *
+	 * <p>
 	 * eg:
 	 * <pre>
 	 *  String result = formatKey("This is a {hello}", "{", "}", k -> Integer.toString(k.length()));
 	 * </pre>
-	 *  result = "This is a 5"
-	 *
+	 * result = "This is a 5"
+	 * <p>
 	 * <pre>
 	 *  String[] values = {"First", "Second"};
 	 *  String result = formatKey("This is a [0][1]", "[", "]", k -> values[Integer.valueOf(k)]);
 	 * </pre>
 	 * result = "This is a FirstSecond"
 	 *
-	 * @param input 	- The text to scan and alter
-	 * @param startKey 	- The series of characters that start the token
-	 * @param endKey 	- The series of characters that end the token
+	 * @param input     - The text to scan and alter
+	 * @param startKey  - The series of characters that start the token
+	 * @param endKey    - The series of characters that end the token
 	 * @param transform - The function to apply to the value found between the startKey and the endKey
 	 * @return - The formatted result.
 	 */
@@ -191,9 +183,8 @@ public final class Strings {
 		while (true) {
 			end += endKeyLength;
 			start = input.indexOf(startKey, end);
-			if (start < 0) {
+			if (start < 0)
 				break;
-			}
 			diff = start - end;
 			if (diff > 0) {
 				if (diff == 1) {
@@ -202,13 +193,11 @@ public final class Strings {
 					output.append(input.substring(end, start));
 				}
 			}
-			if (start + 1 >= input.length()) {
+			if (start + 1 >= input.length())
 				throw new IllegalArgumentException("Unmatched token @ position: " + start);
-			}
 			end = input.indexOf(endKey, start + startKeyLength);
-			if (end < 0) {
+			if (end < 0)
 				throw new IllegalArgumentException("Unmatched token @ position: " + start);
-			}
 			diff = end - start - startKeyLength;
 			if (diff > 0) {
 				if (diff > 1) {
@@ -221,9 +210,64 @@ public final class Strings {
 			}
 		}
 
-		if (-1 < end && end < input.length()) {
+		if (-1 < end && end < input.length())
 			output.append(input.substring(end));
-		}
 		return output.toString();
+	}
+
+	public static String[] split(String target, String on) {
+		if (target == null || target.isEmpty())
+			return EMPTY;
+		int start = target.indexOf(on);
+		if (start < 0)
+			return new String[]{target};
+		List<String> results = new LinkedList<>();
+		if (start > 0)
+			results.add(trimSubstring(target, 0, start));
+		int onLength = on.length();
+		int last = start + onLength;
+		while ((start = target.indexOf(on, last)) >= 0) {
+			int diff = start - last;
+			if (diff > 0) {
+				if (diff == 1) {
+					char c = target.charAt(last);
+					if (!Character.isWhitespace(c))
+						results.add(String.valueOf(c));
+				} else {
+					results.add(trimSubstring(target, last, start));
+				}
+			}
+			last = start + onLength;
+		}
+		results.add(trimSubstring(target, last, target.length()));
+		return results.toArray(EMPTY);
+	}
+
+	public static String trimSubstring(final String target, int start, int end) {
+		if (start < 0)
+			throw new StringIndexOutOfBoundsException(start);
+
+		int diff = end - start;
+		if (diff < 0)
+			throw new StringIndexOutOfBoundsException(diff);
+		if (diff == 1) {
+			final char c = target.charAt(start);
+			return Character.isWhitespace(c) ? "" : String.valueOf(c);
+		}
+
+		final char[] val = target.toCharArray();
+		final int length = val.length;
+		if (end > length)
+			throw new StringIndexOutOfBoundsException(end);
+
+		while (start < end && val[start] <= ' ')
+			start++;
+		while (start < end && val[end - 1] <= ' ')
+			end--;
+
+		diff = end - start;
+		if (diff < 0)
+			throw new StringIndexOutOfBoundsException(diff);
+		return (start > 0 || end < length) ? new String(val, start, diff) : target;
 	}
 }

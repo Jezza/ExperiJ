@@ -3,13 +3,12 @@ package me.jezza;
 import static me.jezza.lib.Strings.format;
 
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
 import me.jezza.asm.ExperiJClassTransformer;
 import me.jezza.interfaces.Results;
-import me.jezza.test.Test;
+import me.jezza.lib.Skip;
 
 /**
  * @author Jezza
@@ -59,26 +58,14 @@ public final class ExperiJ {
 			System.out.println("ExperiJ has been disabled via SystemProperties");
 			return;
 		}
+		// If we take to long in here, such as trying to print 3+ different statements, it starts colliding with other prints, so we just create a simple StringBuilder, and then dump it out all in one go.
+		StringBuilder output = new StringBuilder();
 		if (DEBUG)
-			System.out.println("ExperiJ is in DEBUG mode.");
-		System.out.println("Injecting: " + ExperiJClassTransformer.class.getCanonicalName());
+			output.append("ExperiJ is in DEBUG mode.\n");
+		output.append("Compiling ").append(Skip.load()).append("...\n");
+		output.append("Injecting: ").append(ExperiJClassTransformer.class.getCanonicalName()).append('\n');
+		System.out.println(output.toString());
 		inst.addTransformer(new ExperiJClassTransformer());
-	}
-
-	public static void main(String[] args) {
-		try {
-			for (int i = 0; i < 16; i++)
-				System.out.println(Test.integerToBinaryString(1 << i));
-		} catch (Throwable t) {
-			t.printStackTrace();
-		}
-
-		System.out.println("--Internals--");
-		for (Method method : Test.class.getDeclaredMethods())
-			System.out.println(method.toGenericString());
-
-		System.out.println("--Results--");
-		System.out.println(Test.TEST_THING.toString().replaceAll("[|,]", "\n").replaceAll("[ \\[\\]]", ""));
 	}
 
 	public static Results results(String experimentName) {

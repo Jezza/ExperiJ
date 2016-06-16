@@ -1,4 +1,6 @@
-package me.jezza.test;
+package me.jezza.descriptor;
+
+import java.lang.reflect.Method;
 
 import me.jezza.ExperiJ;
 import me.jezza.ExperimentContext;
@@ -6,15 +8,33 @@ import me.jezza.interfaces.Control;
 import me.jezza.interfaces.Experiment;
 import me.jezza.interfaces.Results;
 import me.jezza.lib.Equality;
+import org.junit.Test;
 
 /**
  * @author Jezza
  */
-public class Test {
+public class BasicTest {
 	public static final Results HELLO = ExperiJ.results("Hello");
 	public static final Results TEST_THING = ExperiJ.results("TestThing");
 
 	private static final char[] digits = {'0', '1'};
+
+	@Test
+	public void run() {
+		try {
+			for (int i = 0; i < 16; i++)
+				System.out.println(integerToBinaryString(1 << i));
+		} catch (Throwable t) {
+			t.printStackTrace();
+		}
+
+		System.out.println("--Internals--");
+		for (Method method : BasicTest.class.getDeclaredMethods())
+			System.out.println(method.toGenericString());
+
+		System.out.println("--Results--");
+		System.out.println(BasicTest.TEST_THING.toString().replaceAll("[|,]", "\n").replaceAll("[ \\[\\]]", ""));
+	}
 
 	@Control("TestThing")
 	public static String integerToBinaryString(int length) {
@@ -43,14 +63,6 @@ public class Test {
 		return result.toString();
 	}
 
-	@Experiment("TestThing")
-	private static String countBits(int length) {
-		char[] c = new char[length];
-		for (int i = 0; i < length; i++)
-			c[i] = oddBinary(i) ? 'B' : 'A';
-		return new String(c);
-	}
-
 	private static String toBinary(int val) {
 		int mag = Integer.SIZE - Integer.numberOfLeadingZeros(val);
 		int chars = Math.max(mag, 1);
@@ -62,6 +74,14 @@ public class Test {
 		return new String(buf);
 	}
 
+	@Experiment("TestThing")
+	private static String countBits(int length) {
+		char[] c = new char[length];
+		for (int i = 0; i < length; i++)
+			c[i] = oddBinary(i) ? 'B' : 'A';
+		return new String(c);
+	}
+
 	private static boolean oddBinary(int val) {
 		int count = 0;
 		do {
@@ -69,6 +89,21 @@ public class Test {
 				count++;
 		} while ((val >>>= 1) != 0);
 		return (count & 1) == 1;
+	}
+
+	@Experiment("TestThing")
+	private static String bitFlip(int length) {
+		char[] c = new char[length];
+		for (int i = 0; i < length; i++)
+			c[i] = fastBit(i) ? 'B' : 'A';
+		return new String(c);
+	}
+
+	private static boolean fastBit(int val) {
+		val ^= val >> 16;
+		val ^= val >> 8;
+		val ^= val >> 4;
+		return ((0x6996 >> (val & 0xf)) & 1) == 1;
 	}
 
 	// String temp = "ABBABAABBAABABBABAABABBAABBABAABBAABABBAABBABAABABBABAABBAABABBABAABABBAABBABAABABBABAABBAABABBAABBABAABBAABABBABAABABBAABBABAABBAABABBAABBABAABABBABAABBAABABBAABBABAABBAABABBABAABABBAABBABAABABBABAABBAABABBABAABABBAABBABAABBAABABBAABBABAABABBABAABBAABABBA";

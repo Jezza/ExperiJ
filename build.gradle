@@ -18,6 +18,10 @@ jar {
 	}
 }
 
+test {
+	jvmArgs "-javaagent:" + jar.archivePath, "-Dexperij.debug=true", "-Dexperij.whitelist=\"jezza\""
+}
+
 // Source jar
 task srcJar(type: Jar) {
 	from sourceSets.main.allSource
