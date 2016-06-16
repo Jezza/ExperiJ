@@ -1,6 +1,6 @@
 apply plugin: 'java'
 
-project.version = "0.2"
+version = 0.3
 
 repositories {
     mavenCentral()
@@ -12,7 +12,6 @@ dependencies {
 
 jar {
 	version = project.version
-	classifier = "dev"
 	manifest {
 		attributes("Manifest-Version": "1.0", "Agent-Class": "me.jezza.ExperiJ", "Premain-Class": "me.jezza.ExperiJ")
 	}
