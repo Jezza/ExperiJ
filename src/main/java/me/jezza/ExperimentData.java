@@ -72,4 +72,3 @@ public final class ExperimentData {
 		private Throwable t;
 	}
 }
-

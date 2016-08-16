@@ -1,6 +1,6 @@
 package me.jezza.lib;
 
-import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
 
 /**
@@ -86,8 +86,8 @@ public class Skip {
 	private static final Predicate<String> filter;
 
 	static {
-		Predicate<String> blacklist = filters(BLACKLIST, Predicate::or);
-		Predicate<String> whitelist = filters(WHITELIST, Predicate::and);
+		Predicate<String> blacklist = createFilter(BLACKLIST, Predicate::or);
+		Predicate<String> whitelist = createFilter(WHITELIST, Predicate::and);
 		if (blacklist != null && whitelist != null)
 			filter = blacklist.and(whitelist.negate());
 		else if (blacklist != null)
@@ -133,7 +133,7 @@ public class Skip {
 	 * @param merge - The function that accepts two predicates to return a merged predicate that provides the behaviour for when multiple filters are found.
 	 * @return - A predicate that encases all of this.
 	 */
-	private static Predicate<String> filters(String key, BiFunction<Predicate<String>, Predicate<String>, Predicate<String>> merge) {
+	private static Predicate<String> createFilter(String key, BinaryOperator<Predicate<String>> merge) {
 		Predicate<String> filter = null;
 		String filters = System.getProperty(key);
 		if (filters != null && filters.length() > 0) {
