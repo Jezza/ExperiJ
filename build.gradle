@@ -13,7 +13,7 @@ dependencies {
 jar {
 	version = project.version
 	manifest {
-		attributes("Manifest-Version": "1.0", "Agent-Class": "me.jezza.ExperiJ", "Premain-Class": "me.jezza.ExperiJ")
+		attributes("Manifest-Version": "1.0", "Agent-Class": "me.jezza.experij.ExperiJ", "Premain-Class": "me.jezza.experij.ExperiJ")
 	}
 }
 
