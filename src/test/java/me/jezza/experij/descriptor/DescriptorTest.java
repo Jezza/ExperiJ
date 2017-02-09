@@ -132,8 +132,4 @@ public class DescriptorTest {
 			Assert.assertTrue("Void was declared as a parameter. This makes no sense.".equals(e.getMessage()));
 		}
 	}
-
-	public static void main(String[] args) {
-		Descriptor.from("(ZZ");
-	}
 }

@@ -90,11 +90,11 @@ public final class ExperiJMethodVisitor extends MethodVisitor implements Opcodes
 				mv.visitVarInsn(ALOAD, 0);
 			}
 			// Load all of the method's parameters, and invoke the entry point.
-			experiment.loadParameters(mv).invokeEntryPoint(mv);
+			experiment.loadAllParameters(mv).invokeEntryPoint(mv);
 			// Return the value that was given back with the specific return code that we got from the descriptor.
 			mv.visitInsn(experiment.returnCode());
-			// Write the maximums, and then end.
-			mv.visitMaxs(0, 1);
+			// The maxes are post-calculated, so don't worry about this.
+			mv.visitMaxs(0, 0);
 			mv.visitEnd();
 
 			// Write the original method, but with a new name, so we can call upon it later.

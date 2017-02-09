@@ -28,7 +28,7 @@ public final class Strings {
 		return name;
 	}
 
-	public static String name(Class<?> clazz) {
+	public static String internalName(Class<?> clazz) {
 		return clazz.getName().replace('.', '/');
 	}
 

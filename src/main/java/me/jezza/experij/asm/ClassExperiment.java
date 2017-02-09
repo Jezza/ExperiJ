@@ -7,8 +7,10 @@ import java.util.List;
 
 import me.jezza.experij.ExperiJ;
 import me.jezza.experij.descriptor.Descriptor;
+import me.jezza.experij.descriptor.Param;
 import me.jezza.experij.interfaces.Control;
 import me.jezza.experij.interfaces.Experiment;
+import me.jezza.experij.lib.Equality;
 import me.jezza.experij.repackage.org.objectweb.asm.ClassVisitor;
 import me.jezza.experij.repackage.org.objectweb.asm.MethodVisitor;
 import me.jezza.experij.repackage.org.objectweb.asm.Opcodes;
@@ -26,6 +28,12 @@ public final class ClassExperiment implements Opcodes {
 	 * The default method access flags to be used when generating static methods.
 	 */
 	public static final int DEFAULT_STATIC_METHOD_ACCESS = DEFAULT_METHOD_ACCESS | ACC_STATIC;
+
+	/**
+	 * The signature format that all the equality methods follow.
+	 * Temporarily, they all go through {@link Equality}.
+	 */
+	private static final String EQUAL_SIGNATURE_FORMAT = "({}{})Z";
 
 	/**
 	 * The class name that all the experiment data was found in.
@@ -99,21 +107,28 @@ public final class ClassExperiment implements Opcodes {
 	 * @return - The bytecode value that has to be used when loading objects from the experiments.
 	 */
 	public int loadCode() {
-		return desc.returnPart().loadCode();
+		int loadCode = desc.returnPart().loadCode;
+		if (loadCode < 0)
+			throw new IllegalStateException("Invalid load code call.");
+		return loadCode;
 	}
 
 	/**
 	 * @return - The bytecode value that has to be used when storing objects from the experiments.
 	 */
 	public int storeCode() {
-		return desc.returnPart().storeCode();
+		int storeCode = desc.returnPart().storeCode;
+		if (storeCode < 0)
+			throw new IllegalStateException("Invalid store code call.");
+		return storeCode;
+
 	}
 
 	/**
 	 * @return - The bytecode value that has to be used when returning objects from the experiments.
 	 */
 	public int returnCode() {
-		return desc.returnPart().returnCode();
+		return desc.returnPart().returnCode;
 	}
 
 	/**
@@ -151,8 +166,17 @@ public final class ClassExperiment implements Opcodes {
 	 * @param mv - The {@link MethodVisitor} that should be used to write the instructions.
 	 * @return - Chaining
 	 */
-	public ClassExperiment loadParameters(MethodVisitor mv) {
-		desc.loadAll(mv);
+	public ClassExperiment loadAllParameters(MethodVisitor mv) {
+		int count = desc.parameterCount();
+		if (count > 0) {
+			for (int i = 0; i < count; i++) {
+				Param param = desc.parameter(i);
+				int loadCode = param.loadCode;
+				if (loadCode < 0)
+					throw new IllegalStateException("Illegal load code call");
+				mv.visitVarInsn(loadCode, param.index);
+			}
+		}
 		return this;
 	}
 
@@ -164,7 +188,9 @@ public final class ClassExperiment implements Opcodes {
 	 * @return - Chaining
 	 */
 	public ClassExperiment invokeEquals(MethodVisitor mv) {
-		desc.returnPart().invokeEquals(mv);
+		Param param = desc.returnPart();
+		String target = param.data.length() > 1 ? "Ljava/lang/Object;" : param.data;
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, Equality.INTERNAL_NAME, "equals", format(EQUAL_SIGNATURE_FORMAT, target, target), false);
 		return this;
 	}
 

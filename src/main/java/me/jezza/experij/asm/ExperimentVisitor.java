@@ -1,8 +1,11 @@
 package me.jezza.experij.asm;
 
+import static me.jezza.experij.lib.Strings.format;
+
 import me.jezza.experij.ExperiJ;
 import me.jezza.experij.ExperimentContext;
 import me.jezza.experij.descriptor.Descriptor;
+import me.jezza.experij.descriptor.Param;
 import me.jezza.experij.repackage.org.objectweb.asm.MethodVisitor;
 import me.jezza.experij.repackage.org.objectweb.asm.Opcodes;
 
@@ -10,6 +13,8 @@ import me.jezza.experij.repackage.org.objectweb.asm.Opcodes;
  * @author Jezza
  */
 public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
+	private static final String STRING_VALUE_OF_SIGNATURE_FORMAT = "({})Ljava/lang/String;";
+
 	private final ClassExperiment experiment;
 	private final boolean staticAccess;
 
@@ -36,8 +41,8 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	 *
 	 * @return - Chaining.
 	 */
-	public ExperimentVisitor loadParameters() {
-		experiment.loadParameters(this);
+	public ExperimentVisitor loadAllParameters() {
+		experiment.loadAllParameters(this);
 		return this;
 	}
 
@@ -139,16 +144,32 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		visitTypeInsn(ANEWARRAY, "java/lang/String");
 
 		for (int i = 0; i < paramCount; i++) {
+			// Duplicate the array so we can set values within it. (As the AASTORE pops the array, the index, and the value.)
 			visitInsn(DUP);
 			// Load the array index that will be used
 			loadInt(i);
-			// Load the parameter, and call String.valueOf
-			desc.parameter(i).load(this).invokeValueOf(this);
+			// Grab the parameter to load
+			Param param = desc.parameter(i);
+			// Grab the load code and confirm it's not an invalid load code. (The void parameter has an invalid load code)
+			int loadCode = param.loadCode;
+			if (loadCode < 0)
+				throw new IllegalStateException("Illegal load code call");
+			// Load the parameter from the stack at the given index.
+			mv.visitVarInsn(loadCode, param.index);
+			// Call String.valueOf. (This next call should leave a string on the stack, so we can store it straight into the array)
+			invokeStringConversion(this, param);
+			// And actually execute the store command, which pops all of the necessary arguments off of the stack.
 			visitInsn(AASTORE);
 		}
 		// Invoke
 		visitMethodInsn(INVOKEVIRTUAL, ExperimentContext.INTERNAL_NAME, "startControl", "([Ljava/lang/String;)J", false);
 		return this;
+	}
+
+	private void invokeStringConversion(MethodVisitor mv, Param param) {
+		// TODO This is just so I can easily get a string. This doesn't take into account arrays, etc.
+		String target = param.data.charAt(0) == 'L' ? "Ljava/lang/Object;" : param.data;
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/String", "valueOf", format(STRING_VALUE_OF_SIGNATURE_FORMAT, target), false);
 	}
 
 	/**

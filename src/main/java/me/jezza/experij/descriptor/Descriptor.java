@@ -4,17 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import me.jezza.experij.descriptor.param.BooleanParam;
-import me.jezza.experij.descriptor.param.ByteParam;
-import me.jezza.experij.descriptor.param.CharParam;
-import me.jezza.experij.descriptor.param.DoubleParam;
-import me.jezza.experij.descriptor.param.FloatParam;
-import me.jezza.experij.descriptor.param.IntParam;
-import me.jezza.experij.descriptor.param.LongParam;
-import me.jezza.experij.descriptor.param.ObjectParam;
-import me.jezza.experij.descriptor.param.ShortParam;
-import me.jezza.experij.descriptor.param.VoidParam;
-import me.jezza.experij.repackage.org.objectweb.asm.MethodVisitor;
+import me.jezza.experij.repackage.org.objectweb.asm.Opcodes;
 
 /**
  * @author Jezza
@@ -28,7 +18,6 @@ public final class Descriptor {
 	private final Param returnParam;
 
 	private transient int hash;
-	private transient String toString;
 
 	private Descriptor(String desc, final String signature, final String[] exceptions, boolean staticAccess) {
 		if (desc == null)
@@ -67,55 +56,55 @@ public final class Descriptor {
 					while (pos < length)
 						if (chars[pos++] == ';')
 							break;
-					param = new ObjectParam(index, arrayCount, new String(Arrays.copyOfRange(chars, expected, pos)));
+					param = new Param(index, arrayCount, new String(Arrays.copyOfRange(chars, expected, pos)), Opcodes.ALOAD, Opcodes.ASTORE, Opcodes.ARETURN);
 					// This value will be reset anyway, but we don't want to trigger the object code that's going to be executed next.
 					arrayCount = 0;
 					break;
 				case 'Z':
 					// Boolean
-					param = new BooleanParam(index, arrayCount);
+					param = new Param(index, arrayCount, "Z", Opcodes.ILOAD, Opcodes.ISTORE, Opcodes.IRETURN);
 					break;
 				case 'B':
 					// Byte
-					param = new ByteParam(index, arrayCount);
+					param = new Param(index, arrayCount, "B", Opcodes.ILOAD, Opcodes.ISTORE, Opcodes.IRETURN);
 					break;
 				case 'S':
 					// Short
-					param = new ShortParam(index, arrayCount);
+					param = new Param(index, arrayCount, "S", Opcodes.ILOAD, Opcodes.ISTORE, Opcodes.IRETURN);
 					break;
 				case 'I':
 					// Int
-					param = new IntParam(index, arrayCount);
+					param = new Param(index, arrayCount, "I", Opcodes.ILOAD, Opcodes.ISTORE, Opcodes.IRETURN);
 					break;
 				case 'F':
 					// Float
-					param = new FloatParam(index, arrayCount);
+					param = new Param(index, arrayCount, "F", Opcodes.FLOAD, Opcodes.FSTORE, Opcodes.FRETURN);
 					break;
 				case 'D':
 					// Double
-					param = new DoubleParam(index, arrayCount);
+					param = new Param(index, arrayCount, "D", Opcodes.DLOAD, Opcodes.DSTORE, Opcodes.DRETURN);
 					break;
 				case 'J':
 					// Long
-					param = new LongParam(index, arrayCount);
+					param = new Param(index, arrayCount, "J", Opcodes.LLOAD, Opcodes.LSTORE, Opcodes.LRETURN);
 					break;
 				case 'C':
 					// Char
-					param = new CharParam(index, arrayCount);
+					param = new Param(index, arrayCount, "C", Opcodes.ILOAD, Opcodes.ISTORE, Opcodes.IRETURN);
 					break;
 				case 'V':
 					if (arrayCount > 0)
 						throw new IllegalStateException("Void was declared with an array. This makes no sense.");
 					if (!closed)
 						throw new IllegalStateException("Void was declared as a parameter. This makes no sense.");
-					param = new VoidParam(index);
+					param = new Param(index, arrayCount, "V", -1, -1, Opcodes.RETURN);
 					break;
 				default:
 					throw new UnsupportedOperationException("Unknown Descriptor Byte: " + c);
 			}
 			// Make sure it's not an object already, AND if it should be an array.
 			if (c != 'L' && arrayCount > 0)
-				param = new ObjectParam(index, arrayCount, String.valueOf(c));
+				param = new Param(index, arrayCount, String.valueOf(c), Opcodes.ALOAD, Opcodes.ASTORE, Opcodes.ARETURN);
 			if (!closed)
 				parameters.add(param);
 			arrayCount = 0;
@@ -146,12 +135,6 @@ public final class Descriptor {
 
 	public int parameterCount() {
 		return parameters.length;
-	}
-
-	public void loadAll(MethodVisitor mv) {
-		if (parameters.length > 0)
-			for (Param param : parameters)
-				param.load(mv);
 	}
 
 	@Override
@@ -186,13 +169,10 @@ public final class Descriptor {
 
 	@Override
 	public String toString() {
-		if (toString == null) {
-			StringBuilder builder = new StringBuilder("(");
-			for (Param param : parameters)
-				builder.append(param);
-			toString = builder.append(')').append(returnParam).toString();
-		}
-		return toString;
+		StringBuilder builder = new StringBuilder("(");
+		for (Param param : parameters)
+			builder.append(param);
+		return builder.append(')').append(returnParam).toString();
 	}
 
 	public static Descriptor from(String desc) {

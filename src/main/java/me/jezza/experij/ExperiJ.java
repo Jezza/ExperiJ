@@ -16,7 +16,7 @@ public final class ExperiJ {
 	/**
 	 * Used for internal reference.
 	 */
-	public static final String INTERNAL_NAME = Strings.name(ExperiJ.class);
+	public static final String INTERNAL_NAME = Strings.internalName(ExperiJ.class);
 
 	/**
 	 * Used as the entry point for methods.

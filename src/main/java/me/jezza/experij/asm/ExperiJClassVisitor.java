@@ -55,7 +55,7 @@ public final class ExperiJClassVisitor extends ClassVisitor implements Opcodes {
 			// Store the key, this is used the throughout the entire experiment.
 			int keyIndex = ev.opcode(LSTORE, 1);
 			// Load 'this', and all of the method's parameters, and fire the control method.
-			ev.loadThis().loadParameters().invokeControl();
+			ev.loadThis().loadAllParameters().invokeControl();
 			// Store the result locally with the offset of 1 as results are taking the first index
 			int controlMemoryIndex = ev.voidMethod() ? -1 : ev.store(3);
 			// Stop the measurement for the control, with the result index
@@ -73,7 +73,7 @@ public final class ExperiJClassVisitor extends ClassVisitor implements Opcodes {
 				// Start experiment measurement
 				ev.startExperiment(i, resultIndex, keyIndex);
 				// Load 'this', and all of the method parameters, and fire the experiment method
-				ev.loadThis().loadParameters().invokeExperiment(i);
+				ev.loadThis().loadAllParameters().invokeExperiment(i);
 				// Store the result, which is the experiment index + the free index after the control result
 				int experimentMemoryIndex = ev.voidMethod() ? -1 : ev.store(4);
 				// Stop the experiment measurement

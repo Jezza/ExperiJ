@@ -4,7 +4,7 @@ package me.jezza.experij.lib;
  * @author Jezza
  */
 public final class Equality {
-	public static final String INTERNAL_NAME = Strings.name(Equality.class);
+	public static final String INTERNAL_NAME = Strings.internalName(Equality.class);
 
 	private Equality() {
 		throw new IllegalStateException();

@@ -19,7 +19,7 @@ public final class ExperimentData {
 	private long control = -1;
 	private int active = 0;
 
-	public ExperimentData(String experimentName, String controlMethod, int experimentCount, String[] params) {
+	ExperimentData(String experimentName, String controlMethod, int experimentCount, String[] params) {
 		this.experimentName = experimentName;
 		this.controlMethod = controlMethod;
 		this.params = Arrays.asList(params);

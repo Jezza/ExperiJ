@@ -1,5 +1,6 @@
 package me.jezza.experij.lib;
 
+import java.util.Objects;
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
 
@@ -134,6 +135,7 @@ public final class Skip {
 	 * @return - A predicate that adheres to the rules passed in.
 	 */
 	public static Predicate<String> createFilter(String rule, BinaryOperator<Predicate<String>> merge) {
+		Objects.requireNonNull(merge, "Argument 'merge' cannot be null");
 		if (rule == null || rule.isEmpty())
 			return null;
 		String[] split = Strings.split(rule, DELIMITER);

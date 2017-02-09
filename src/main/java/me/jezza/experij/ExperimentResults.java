@@ -16,10 +16,10 @@ final class ExperimentResults extends ArrayList<Execution> {
 
 	ExperimentResults(String experimentName) {
 		if (ExperiJ.DEBUG)
-			System.out.println("Creating Results for '" + experimentName + "'.");
+			System.out.println("Creating results for '" + experimentName + '\'');
 	}
 
-	public Results immutable() {
+	Results immutable() {
 		return immutableView != null ? immutableView : (immutableView = new ImmutableView(this));
 	}
 

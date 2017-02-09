@@ -10,7 +10,7 @@ import me.jezza.experij.lib.Strings;
  * @author Jezza
  */
 public final class ExperimentContext {
-	public static final String INTERNAL_NAME = Strings.name(ExperimentContext.class);
+	public static final String INTERNAL_NAME = Strings.internalName(ExperimentContext.class);
 
 	private final ExperimentResults results;
 	private final String experimentName;
@@ -19,8 +19,7 @@ public final class ExperimentContext {
 	private final Map<Long, ExperimentData> activeData = new HashMap<>();
 	private final AtomicLong nextKey = new AtomicLong(0);
 
-
-	protected ExperimentContext(String experimentName, String controlMethod, int experimentCount) {
+	ExperimentContext(String experimentName, String controlMethod, int experimentCount) {
 		this.results = ExperiJ.RESULT_MAP.computeIfAbsent(experimentName, ExperimentResults::new);
 		this.experimentName = experimentName;
 		this.controlMethod = controlMethod;
