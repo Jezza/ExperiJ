@@ -1,7 +1,6 @@
 package me.jezza.experij.descriptor.param;
 
 import me.jezza.experij.descriptor.Param;
-import me.jezza.experij.descriptor.Param;
 import me.jezza.experij.repackage.org.objectweb.asm.Opcodes;
 
 /**

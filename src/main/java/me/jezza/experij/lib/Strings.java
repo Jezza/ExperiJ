@@ -225,8 +225,8 @@ public final class Strings {
 	 * (Yes, I know there's a hotpath for {@link String#split(String)} with single non-regex meta characters, but this treats the whole string as a literal delimiter)
 	 * 3) *Occasionally* faster than {@link String#split(String)}
 	 *
-	 * @param target	- The string to perform the split on.
-	 * @param on		- the delimiter. (The string to split the target on.)
+	 * @param target - The string to perform the split on.
+	 * @param on     - the delimiter. (The string to split the target on.)
 	 * @return - an array of strings computed by splitting the given string around literal matches of the given delimiter.
 	 */
 	public static String[] split(String target, String on) {
