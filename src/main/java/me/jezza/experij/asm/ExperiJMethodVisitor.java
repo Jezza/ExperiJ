@@ -12,7 +12,7 @@ import me.jezza.experij.repackage.org.objectweb.asm.Opcodes;
 /**
  * @author Jezza
  */
-public final class ExperiJMethodVisitor extends MethodVisitor implements Opcodes {
+final class ExperiJMethodVisitor extends MethodVisitor implements Opcodes {
 	private final ExperiJClassVisitor cv;
 	private final boolean staticAccess;
 	private final String methodName;
@@ -21,7 +21,7 @@ public final class ExperiJMethodVisitor extends MethodVisitor implements Opcodes
 	private boolean isExperiment;
 	private ClassExperiment experiment;
 
-	protected ExperiJMethodVisitor(ExperiJClassVisitor cv, MethodVisitor mv, int access, String methodName, String desc, final String signature, final String[] exceptions) {
+	ExperiJMethodVisitor(ExperiJClassVisitor cv, MethodVisitor mv, int access, String methodName, String desc, final String signature, final String[] exceptions) {
 		super(ASM5, mv);
 		this.cv = cv;
 		this.staticAccess = (access & ACC_STATIC) != 0;

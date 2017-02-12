@@ -13,11 +13,11 @@ import me.jezza.experij.repackage.org.objectweb.asm.Opcodes;
 /**
  * @author Jezza
  */
-public final class ExperiJClassVisitor extends ClassVisitor implements Opcodes {
+final class ExperiJClassVisitor extends ClassVisitor implements Opcodes {
 	private final String className;
 	private final Map<String, ClassExperiment> experiments;
 
-	public ExperiJClassVisitor(ClassVisitor cv, String className) {
+	ExperiJClassVisitor(ClassVisitor cv, String className) {
 		super(ASM5, cv);
 		this.className = className;
 		experiments = new HashMap<>();

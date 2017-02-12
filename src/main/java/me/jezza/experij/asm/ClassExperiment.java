@@ -17,7 +17,7 @@ import me.jezza.experij.repackage.org.objectweb.asm.Type;
 /**
  * @author Jezza
  */
-public final class ClassExperiment implements Opcodes {
+final class ClassExperiment implements Opcodes {
 	/**
 	 * The default method access flags to be used when generating methods.
 	 */
@@ -64,7 +64,7 @@ public final class ClassExperiment implements Opcodes {
 	 */
 	private Descriptor desc = null;
 
-	protected ClassExperiment(String className, String experimentName, boolean staticAccess) {
+	ClassExperiment(String className, String experimentName, boolean staticAccess) {
 		this.className = className;
 		this.name = experimentName;
 		this.staticAccess = staticAccess;

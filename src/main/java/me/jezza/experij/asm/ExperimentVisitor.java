@@ -9,11 +9,11 @@ import me.jezza.experij.repackage.org.objectweb.asm.Type;
 /**
  * @author Jezza
  */
-public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
+final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	private final ClassExperiment experiment;
 	private final boolean staticAccess;
 
-	protected ExperimentVisitor(ClassExperiment experiment, MethodVisitor mv, boolean staticAccess) {
+	ExperimentVisitor(ClassExperiment experiment, MethodVisitor mv, boolean staticAccess) {
 		super(ASM5, mv);
 		this.experiment = experiment;
 		this.staticAccess = staticAccess;
