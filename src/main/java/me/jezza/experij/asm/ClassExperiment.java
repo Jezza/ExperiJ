@@ -21,22 +21,22 @@ final class ClassExperiment implements Opcodes {
 	/**
 	 * The default method access flags to be used when generating methods.
 	 */
-	public static final int DEFAULT_METHOD_ACCESS = ACC_PRIVATE | ACC_SYNTHETIC | ACC_FINAL;
+	private static final int DEFAULT_METHOD_ACCESS = ACC_PRIVATE | ACC_SYNTHETIC | ACC_FINAL;
 
 	/**
 	 * The default method access flags to be used when generating static methods.
 	 */
-	public static final int DEFAULT_STATIC_METHOD_ACCESS = DEFAULT_METHOD_ACCESS | ACC_STATIC;
+	private static final int DEFAULT_STATIC_METHOD_ACCESS = DEFAULT_METHOD_ACCESS | ACC_STATIC;
+
+	/**
+	 * Name of the experiment.
+	 */
+	final String name;
 
 	/**
 	 * The class name that all the experiment data was found in.
 	 */
 	private final String className;
-
-	/**
-	 * Name of the experiment.
-	 */
-	private final String name;
 
 	/**
 	 * If the experiments are static, and should be treated as such.
@@ -49,9 +49,14 @@ final class ClassExperiment implements Opcodes {
 	private final String entryPoint;
 
 	/**
-	 * The name of the renamed control method.
+	 * The instruction code that is to be used when invoking the experiment methods.
 	 */
-	private String controlMethod;
+	private final int invokeCode;
+
+	/**
+	 * The access flags that are to be used when generating methods. (Static methods, etc)
+	 */
+	private final int methodAccess;
 
 	/**
 	 * The names of all the experiments to run along side the control.
@@ -59,30 +64,43 @@ final class ClassExperiment implements Opcodes {
 	private final List<String> methodNames;
 
 	/**
+	 * The name of the renamed control method.
+	 */
+	private String controlMethod;
+
+	/**
 	 * The descriptor of all the methods.
 	 * NOTE: If any of the methods have a differing descriptor an exception WILL be thrown.
 	 */
-	private Descriptor desc = null;
+	private Descriptor desc;
 
 	ClassExperiment(String className, String experimentName, boolean staticAccess) {
 		this.className = className;
 		this.name = experimentName;
 		this.staticAccess = staticAccess;
-		this.entryPoint = format(ExperiJ.ENTRY_POINT_FORMAT, experimentName);
+		entryPoint = format(ExperiJ.ENTRY_POINT_FORMAT, experimentName);
+		invokeCode = staticAccess ? INVOKESTATIC : INVOKEVIRTUAL;
+		methodAccess = staticAccess ? DEFAULT_STATIC_METHOD_ACCESS : DEFAULT_METHOD_ACCESS;
 		methodNames = new ArrayList<>(3);
 		System.out.println("Registering: " + experimentName);
 	}
 
-	public String name() {
-		return name;
-	}
-
-	public String className() {
-		return className;
-	}
-
+	/**
+	 * @return - The name of the control method.
+	 */
 	public String controlMethod() {
+		if (controlMethod == null)
+			throw new IllegalStateException("Control method hasn't been discovered yet. (This might have been called too early in the execution cycle.)");
 		return controlMethod;
+	}
+
+	/**
+	 * @return - The descriptor that all experiment methods and the control method should match.
+	 */
+	public Descriptor desc() {
+		if (desc == null)
+			throw new IllegalStateException("Descriptor hasn't been set yet. (This might have been called too early in the execution cycle.)");
+		return desc;
 	}
 
 	public String names(int index) {
@@ -90,10 +108,17 @@ final class ClassExperiment implements Opcodes {
 	}
 
 	/**
-	 * @return - The descriptor that all experiment methods and the control method should match.
+	 * @return - The size of all the experiments, not including the control.
 	 */
-	public Descriptor desc() {
-		return desc;
+	public int size() {
+		return methodNames.size();
+	}
+
+	/**
+	 * @return - The first free memory index. Accounts for parameters, and 'this'.
+	 */
+	public int firstFreeIndex() {
+		return desc.firstFreeIndex;
 	}
 
 	/**
@@ -123,31 +148,31 @@ final class ClassExperiment implements Opcodes {
 	}
 
 	/**
-	 * @return - The bytecode value that has to be used when invoking the experiment methods.
+	 * Registers a method as apart of this experiment set.
+	 *
+	 * @param methodName - The name of the method that the annotation was found on.
+	 * @param desc       - The descriptor of the method, used to confirm that the methods have the same signature.
+	 * @param control    - If this method is the control of the experiment set.
 	 */
-	public int invokeCode() {
-		return staticAccess ? INVOKESTATIC : INVOKEVIRTUAL;
-	}
-
-	/**
-	 * @return - The access flags that have to be used when generating methods. (Accounts for static methods)
-	 */
-	public int methodAccess() {
-		return staticAccess ? DEFAULT_STATIC_METHOD_ACCESS : DEFAULT_METHOD_ACCESS;
-	}
-
-	/**
-	 * @return - The size of all the experiments, not including the control.
-	 */
-	public int size() {
-		return methodNames.size();
-	}
-
-	/**
-	 * @return - The first free memory index. Accounts for parameters, and 'this'.
-	 */
-	public int firstIndex() {
-		return desc.firstFreeIndex;
+	public ClassExperiment register(String methodName, Descriptor desc, boolean control, boolean staticAccess) {
+		if (this.staticAccess != staticAccess)
+			throw new IllegalStateException("Multiple method signatures across experiment: " + name + ". All methods of an experiment have to have the same method signatures for now. (Including static bound methods). This might change in the future, if it does, this exception will be removed.");
+		int hash = desc.hashCode();
+		if (this.desc == null) {
+			this.desc = desc;
+		} else if (hash != this.desc.hashCode()) {
+			throw new IllegalStateException("Multiple method signatures across experiment: " + name + ". All methods of an experiment have to have the same method signatures for now. This might change in the future, if it does, this exception will be removed.");
+		}
+		if (control) {
+			if (this.controlMethod != null)
+				throw new IllegalStateException("There are multiple control methods declared for the experiment: " + name);
+			controlMethod = methodName;
+		} else {
+			if (methodNames.contains(methodName) || !methodNames.add(methodName))
+				// I have no idea how this could even happen...
+				throw new IllegalStateException("There are multiple experiment methods with the same name: " + methodName);
+		}
+		return this;
 	}
 
 	/**
@@ -173,7 +198,20 @@ final class ClassExperiment implements Opcodes {
 		return this;
 	}
 
-	public ClassExperiment convertToString(MethodVisitor mv, Type argument) {
+	/**
+	 * Converts a given argument of a given type at a given index.
+	 *
+	 * @param mv        - The {@link MethodVisitor} that should be used to write the instructions.
+	 * @param argument  - The type of the argument that should be converted.
+	 * @param loadIndex - The index of the argument. (Used to load the parameter into the locals)
+	 * @return - Chaining
+	 */
+	public ClassExperiment convertToString(MethodVisitor mv, Type argument, int loadIndex) {
+		// Get the correct load code from the argument type.
+		int loadCode = argument.getOpcode(ILOAD);
+		// Load the parameter from the stack at the given index.
+		mv.visitVarInsn(loadCode, loadIndex);
+
 		int sort = argument.getSort();
 		if (sort == Type.ARRAY) {
 			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/util/Arrays", "deepToString", "([Ljava/lang/Object;)Ljava/lang/String;", false);
@@ -187,8 +225,8 @@ final class ClassExperiment implements Opcodes {
 				return this;
 			target = "Ljava/lang/Object;";
 		}
-		// String doesn't have a byte version, so we should convert it to an integer.
-		if (sort == Type.BYTE) {
+		// String doesn't have a byte or a short version, but we can sneakily abuse the JVM here by calling the integer version.
+		if (sort == Type.BYTE || sort == Type.SHORT) {
 			target = Type.INT_TYPE.toString();
 		}
 		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/String", "valueOf", format("({})Ljava/lang/String;", target), false);
@@ -199,7 +237,10 @@ final class ClassExperiment implements Opcodes {
 	 * Inserts the bytecode instructions to dynamically equate the first two objects on the stack.
 	 * The method it uses to determine which method to call is based on the return type.
 	 *
-	 * @param mv - The {@link MethodVisitor} that should be used to write the instructions.
+	 * @param mv                    - The {@link MethodVisitor} that should be used to write the instructions.
+	 * @param loadCode              - The load code that should be used when loading either the control result or the experiment result.
+	 * @param controlMemoryIndex    - The memory index that the contains the control results.
+	 * @param experimentMemoryIndex - The memory index that the contains an experiment's results.
 	 * @return - Chaining
 	 */
 	public ClassExperiment invokeEquals(MethodVisitor mv, int loadCode, int controlMemoryIndex, int experimentMemoryIndex) {
@@ -257,7 +298,6 @@ final class ClassExperiment implements Opcodes {
 
 				// A label that can be used to jump to the end
 				Label end = new Label();
-
 				// Load the control result into the locals
 				mv.visitVarInsn(loadCode, controlMemoryIndex);
 				// Label that points to the code that checks the objects using the Object#equals(Object) method.
@@ -308,6 +348,12 @@ final class ClassExperiment implements Opcodes {
 		}
 	}
 
+	/**
+	 * Basic code that generates a true/false branch split.
+	 *
+	 * @param mv     - The {@link MethodVisitor} that should be used to write the instructions.
+	 * @param opcode - Instruction that should be executed before generating the true/false branch.
+	 */
 	private static void generateTrueFalseBranch(MethodVisitor mv, int opcode) {
 		mv.visitInsn(opcode);
 		Label falseBranch = new Label();
@@ -318,34 +364,6 @@ final class ClassExperiment implements Opcodes {
 		mv.visitLabel(falseBranch);
 		mv.visitInsn(ICONST_0);
 		mv.visitLabel(trueBranch);
-	}
-
-	/**
-	 * Registers a method as apart of this experiment set.
-	 *
-	 * @param methodName - The name of the method that the annotation was found on.
-	 * @param desc       - The descriptor of the method, used to confirm that the methods have the same signature.
-	 * @param control    - If this method is the control of the experiment set.
-	 */
-	public ClassExperiment register(String methodName, Descriptor desc, boolean control, boolean staticAccess) {
-		if (this.staticAccess != staticAccess)
-			throw new IllegalStateException("Multiple method signatures across experiment: " + name + ". All methods of an experiment have to have the same method signatures for now. (Including static bound methods). This might change in the future, if it does, this exception will be removed.");
-		int hash = desc.hashCode();
-		if (this.desc == null) {
-			this.desc = desc;
-		} else if (hash != this.desc.hashCode()) {
-			throw new IllegalStateException("Multiple method signatures across experiment: " + name + ". All methods of an experiment have to have the same method signatures for now. This might change in the future, if it does, this exception will be removed.");
-		}
-		if (control) {
-			if (this.controlMethod != null)
-				throw new IllegalStateException("There are multiple control methods declared for the experiment: " + name);
-			controlMethod = methodName;
-		} else {
-			if (methodNames.contains(methodName) || !methodNames.add(methodName))
-				// I have no idea how this could even happen...
-				throw new IllegalStateException("There are multiple experiment methods with the same name: " + methodName);
-		}
-		return this;
 	}
 
 	/**
@@ -360,11 +378,11 @@ final class ClassExperiment implements Opcodes {
 	}
 
 	public ExperimentVisitor createEntryPoint(ClassVisitor cv) {
-		return createMethod(cv, methodAccess(), entryPoint);
+		return createMethod(cv, methodAccess, entryPoint);
 	}
 
 	public ExperimentVisitor createMethod(ClassVisitor cv, String name) {
-		return createMethod(cv, methodAccess(), name);
+		return createMethod(cv, methodAccess, name);
 	}
 
 	public ExperimentVisitor createMethod(ClassVisitor cv, int access, String name) {
@@ -385,7 +403,7 @@ final class ClassExperiment implements Opcodes {
 	}
 
 	private ClassExperiment invoke(MethodVisitor mv, String methodName) {
-		mv.visitMethodInsn(invokeCode(), className, methodName, desc.toString(), false);
+		mv.visitMethodInsn(invokeCode, className, methodName, desc.toString(), false);
 		return this;
 	}
 }

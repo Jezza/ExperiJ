@@ -8,31 +8,33 @@ import me.jezza.experij.repackage.org.objectweb.asm.Type;
  * @author Jezza
  */
 final class Descriptor {
-	public final String signature;
-	public final String[] exceptions;
-	public final boolean staticAccess;
+	final String signature;
+	final String[] exceptions;
 
-	public final Type methodType;
-	public final Type[] argumentTypes;
-	public final Type returnType;
+	final Type methodType;
+	final Type[] argumentTypes;
+	final Type returnType;
 
-	public final int firstFreeIndex;
+	final int firstFreeIndex;
 
 	private transient int hash;
 
-	private Descriptor(String desc, final String signature, final String[] exceptions, boolean staticAccess) {
+	Descriptor(String desc, final String signature, final String[] exceptions, boolean staticAccess) {
 		if (desc == null)
 			throw new NullPointerException("Descriptor input string is null");
 		this.signature = signature;
 		this.exceptions = exceptions;
-		this.staticAccess = staticAccess;
 		Type type = Type.getMethodType(desc);
 		this.methodType = type;
 		this.argumentTypes = type.getArgumentTypes();
 		this.returnType = type.getReturnType();
 		int index = staticAccess ? 0 : 1;
-		for (Type argumentType : argumentTypes)
-			index += argumentType.getSize();
+		for (Type argument : argumentTypes) {
+			// Confirm that the argument isn't a void type
+			if (argument.getSort() == Type.VOID)
+				throw new IllegalStateException("Argument type is void. " + desc);
+			index += argument.getSize();
+		}
 		firstFreeIndex = index;
 	}
 
@@ -69,17 +71,5 @@ final class Descriptor {
 	@Override
 	public String toString() {
 		return methodType.toString();
-	}
-
-	public static Descriptor from(String desc) {
-		return new Descriptor(desc, null, null, false);
-	}
-
-	public static Descriptor from(String desc, boolean staticAccess) {
-		return new Descriptor(desc, null, null, staticAccess);
-	}
-
-	public static Descriptor from(String desc, final String signature, final String[] exceptions, boolean staticAccess) {
-		return new Descriptor(desc, signature, exceptions, staticAccess);
 	}
 }

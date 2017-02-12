@@ -46,7 +46,7 @@ final class ExperiJClassVisitor extends ClassVisitor implements Opcodes {
 			// Verify that the experiment was correctly built.
 			experiment.validate();
 			// Generate experiment code
-			System.out.println("Generating Experiments: " + experiment.name());
+			System.out.println("Generating Experiments: " + experiment.name);
 			ExperimentVisitor ev = experiment.createEntryPoint(cv);
 			ev.visitCode();
 			// Load the results into a local variable with the offset of 0.

@@ -1,39 +1,24 @@
 package me.jezza.experij.argument;
 
-import me.jezza.experij.BaseTest;
-import me.jezza.experij.ExperiJ;
 import me.jezza.experij.interfaces.Control;
 import me.jezza.experij.interfaces.Experiment;
-import me.jezza.experij.interfaces.Results;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Jezza
  */
-public final class ObjectArgumentTest extends BaseTest {
+public final class ObjectArgumentTest extends AbstractArgumentTest {
 	private static final String TEST_0 = "OBJECT_PARAMETER_TEST_0";
 	private static final String TEST_1 = "OBJECT_PARAMETER_TEST_1";
 
-	private static Holder holder;
+	private Holder holder;
 
 	@Test
 	public void testObject() {
 		holder = new Holder();
-		Results results = ExperiJ.results(TEST_0);
-		expect(results.size(), 0);
-		expect(holder.value, 0);
-		param0();
-		expect(results.size(), 1);
-		expect(holder.value, 10);
-
+		runTest(TEST_0, 10, this::param0);
 		holder = new Holder();
-
-		results = ExperiJ.results(TEST_1);
-		expect(results.size(), 0);
-		expect(holder.value, 0);
-		param1(holder);
-		expect(results.size(), 1);
-		expect(holder.value, 10);
+		runTest(TEST_1, 10, () -> param1(holder));
 	}
 
 	@Control(TEST_0)
@@ -56,11 +41,9 @@ public final class ObjectArgumentTest extends BaseTest {
 		x.add(5);
 	}
 
-	public static class Holder {
-		private int value;
-
+	public class Holder {
 		public void add(int x) {
-			value += x;
+			data += x;
 		}
 	}
 }

@@ -26,7 +26,7 @@ final class ExperiJMethodVisitor extends MethodVisitor implements Opcodes {
 		this.cv = cv;
 		this.staticAccess = (access & ACC_STATIC) != 0;
 		this.methodName = methodName;
-		this.desc = Descriptor.from(desc, signature, exceptions, staticAccess);
+		this.desc = new Descriptor(desc, signature, exceptions, staticAccess);
 	}
 
 	@Override

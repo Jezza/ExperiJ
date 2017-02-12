@@ -21,5 +21,4 @@ class AbstractReturnTest extends BaseTest {
 		Assertions.assertTrue(experiments.get(correctMethod).equal(), "Failed to determine that the results were the same");
 		Assertions.assertFalse(experiments.get(incorrectMethod).equal(), "Failed to determine that the results were different");
 	}
-
 }

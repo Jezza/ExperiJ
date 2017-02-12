@@ -63,7 +63,7 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	 * Shorthand to store the experiment's object.
 	 * Using the experiment's object's specific bytecode to do the storing.
 	 *
-	 * @param offset - The memory offset from {@link ClassExperiment#firstIndex()}
+	 * @param offset - The memory offset from {@link ClassExperiment#firstFreeIndex()}
 	 * @return - The final memory index that was used. Use this to load the object back onto the stack.
 	 */
 	public int store(int offset) {
@@ -74,11 +74,11 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	 * Executes the given opcode using the offset passed in for the parameter.
 	 *
 	 * @param opcode - The opcode to execute.
-	 * @param offset - The offset from {@link ClassExperiment#firstIndex()}
+	 * @param offset - The offset from {@link ClassExperiment#firstFreeIndex()}
 	 * @return - The final memory index. Use this to load the object back onto the stack.
 	 */
 	public int opcode(int opcode, int offset) {
-		int memoryIndex = experiment.firstIndex() + offset;
+		int memoryIndex = experiment.firstFreeIndex() + offset;
 		visitVarInsn(opcode, memoryIndex);
 		return memoryIndex;
 	}
@@ -106,8 +106,8 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	 * @return - The index that the results object is stored within, NOTE: NOT the offset.
 	 */
 	public int createResults(int offset) {
-		int resultIndex = experiment.firstIndex() + offset;
-		visitLdcInsn(experiment.name());
+		int resultIndex = experiment.firstFreeIndex() + offset;
+		visitLdcInsn(experiment.name);
 		visitLdcInsn(experiment.controlMethod());
 		loadInt(experiment.size());
 		visitMethodInsn(INVOKESTATIC, ExperiJ.INTERNAL_NAME, "context", "(Ljava/lang/String;Ljava/lang/String;I)L" + ExperimentContext.INTERNAL_NAME + ";", false);
@@ -139,14 +139,8 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 			visitInsn(DUP);
 			// Load the array index that will be used
 			loadInt(i);
-			// Grab the load code and confirm it's not an invalid load code. (The void parameter has an invalid load code)
-			int loadCode = argument.getOpcode(ILOAD);
-			if (loadCode < 0)
-				throw new IllegalStateException("Illegal load code call");
-			// Load the parameter from the stack at the given index.
-			visitVarInsn(loadCode, loadIndex);
 			// Call String.valueOf. (This next call should leave a string on the stack, so we can store it straight into the array)
-			experiment.convertToString(this, argument);
+			experiment.convertToString(this, argument, loadIndex);
 			// And actually execute the store command, which pops all of the necessary arguments off of the stack.
 			visitInsn(AASTORE);
 			// Keep track of the size of the arguments so we know where to load from next.
