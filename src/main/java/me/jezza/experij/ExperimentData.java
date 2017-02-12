@@ -10,7 +10,7 @@ import java.util.Map;
  *
  * @author Jezza
  */
-public final class ExperimentData {
+final class ExperimentData {
 	private final String experimentName;
 	private final String controlMethod;
 	private final List<String> params;

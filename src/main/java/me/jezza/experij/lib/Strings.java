@@ -9,7 +9,7 @@ import java.util.function.Function;
  */
 public final class Strings {
 	private static final char[] OBJ_REP_CHARS = "{}".toCharArray();
-	private static final String SAFE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNPPQRSTUVWXYZ$_1234567890";
+	private static final String SAFE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$_1234567890";
 	private static final String[] EMPTY = new String[0];
 
 	private Strings() {

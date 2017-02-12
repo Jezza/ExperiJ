@@ -1,20 +1,15 @@
 package me.jezza.experij.asm;
 
-import static me.jezza.experij.lib.Strings.format;
-
 import me.jezza.experij.ExperiJ;
 import me.jezza.experij.ExperimentContext;
-import me.jezza.experij.descriptor.Descriptor;
-import me.jezza.experij.descriptor.Param;
 import me.jezza.experij.repackage.org.objectweb.asm.MethodVisitor;
 import me.jezza.experij.repackage.org.objectweb.asm.Opcodes;
+import me.jezza.experij.repackage.org.objectweb.asm.Type;
 
 /**
  * @author Jezza
  */
 public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
-	private static final String STRING_VALUE_OF_SIGNATURE_FORMAT = "({})Ljava/lang/String;";
-
 	private final ClassExperiment experiment;
 	private final boolean staticAccess;
 
@@ -22,6 +17,13 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		super(ASM5, mv);
 		this.experiment = experiment;
 		this.staticAccess = staticAccess;
+	}
+
+	/**
+	 * @return - The descriptor that all experiment methods and the control method should match.
+	 */
+	public Descriptor desc() {
+		return experiment.desc();
 	}
 
 	/**
@@ -82,30 +84,16 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	}
 
 	public void loadInt(int value) {
-		switch (value) {
-			case 1:
-				visitInsn(ICONST_1);
-				break;
-			case 2:
-				visitInsn(ICONST_2);
-				break;
-			case 3:
-				visitInsn(ICONST_3);
-				break;
-			case 4:
-				visitInsn(ICONST_4);
-				break;
-			case 5:
-				visitInsn(ICONST_5);
-				break;
-			default:
-				if (value <= Byte.MAX_VALUE) {
-					visitIntInsn(BIPUSH, value);
-				} else if (value <= Short.MAX_VALUE) {
-					visitIntInsn(SIPUSH, value);
-				} else {
-					visitLdcInsn(value);
-				}
+		if (value < -1) {
+			visitLdcInsn(value);
+		} else if (value <= 5) {
+			mv.visitInsn(ICONST_0 + value);
+		} else if (value <= Byte.MAX_VALUE) {
+			visitIntInsn(BIPUSH, value);
+		} else if (value <= Short.MAX_VALUE) {
+			visitIntInsn(SIPUSH, value);
+		} else {
+			visitLdcInsn(value);
 		}
 	}
 
@@ -136,40 +124,37 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	public ExperimentVisitor startControl(int resultIndex) {
 		// Load the results variable
 		visitVarInsn(ALOAD, resultIndex);
-		Descriptor desc = experiment.desc();
-		int paramCount = desc.parameterCount();
+		Type[] argumentTypes = experiment.desc().argumentTypes;
+		int count = argumentTypes.length;
 		// Load the array size
-		loadInt(paramCount);
+		loadInt(count);
 		// Create array of a string type
 		visitTypeInsn(ANEWARRAY, "java/lang/String");
 
-		for (int i = 0; i < paramCount; i++) {
+		// Create a variable to keep track of the index we should be loading the arguments from.
+		int loadIndex = staticAccess ? 0 : 1;
+		for (int i = 0; i < argumentTypes.length; i++) {
+			Type argument = argumentTypes[i];
 			// Duplicate the array so we can set values within it. (As the AASTORE pops the array, the index, and the value.)
 			visitInsn(DUP);
 			// Load the array index that will be used
 			loadInt(i);
-			// Grab the parameter to load
-			Param param = desc.parameter(i);
 			// Grab the load code and confirm it's not an invalid load code. (The void parameter has an invalid load code)
-			int loadCode = param.loadCode;
+			int loadCode = argument.getOpcode(ILOAD);
 			if (loadCode < 0)
 				throw new IllegalStateException("Illegal load code call");
 			// Load the parameter from the stack at the given index.
-			mv.visitVarInsn(loadCode, param.index);
+			visitVarInsn(loadCode, loadIndex);
 			// Call String.valueOf. (This next call should leave a string on the stack, so we can store it straight into the array)
-			invokeStringConversion(this, param);
+			experiment.convertToString(this, argument);
 			// And actually execute the store command, which pops all of the necessary arguments off of the stack.
 			visitInsn(AASTORE);
+			// Keep track of the size of the arguments so we know where to load from next.
+			loadIndex += argument.getSize();
 		}
-		// Invoke
+		// Invoke the startControl method
 		visitMethodInsn(INVOKEVIRTUAL, ExperimentContext.INTERNAL_NAME, "startControl", "([Ljava/lang/String;)J", false);
 		return this;
-	}
-
-	private void invokeStringConversion(MethodVisitor mv, Param param) {
-		// TODO This is just so I can easily get a string. This doesn't take into account arrays, etc.
-		String target = param.data.charAt(0) == 'L' ? "Ljava/lang/Object;" : param.data;
-		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/String", "valueOf", format(STRING_VALUE_OF_SIGNATURE_FORMAT, target), false);
 	}
 
 	/**
@@ -246,6 +231,8 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	}
 
 	public ExperimentVisitor reportEquality(int resultIndex, int keyIndex, int experimentIndex, int controlMemoryIndex, int experimentMemoryIndex) {
+		// Note: controlMemoryIndex and experimentMemoryIndex can be -1, if it's a void method.
+		// We branch before we use them, but it should be kept in mind when altering this method.
 		// Load the results variable
 		visitVarInsn(ALOAD, resultIndex);
 		// Load the equality key
@@ -257,14 +244,8 @@ public final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 			// Load true, because it's a void method.
 			visitInsn(ICONST_1);
 		} else {
-			// Load the initial control result, and this experiment's result.
-			int loadCode = experiment.loadCode();
-			// Load the control value onto the stack
-			visitVarInsn(loadCode, controlMemoryIndex);
-			// Load the experiment result onto the stack
-			visitVarInsn(loadCode, experimentMemoryIndex);
 			// Dynamic equality checks.
-			experiment.invokeEquals(mv);
+			experiment.invokeEquals(mv, experiment.loadCode(), controlMemoryIndex, experimentMemoryIndex);
 		}
 		// Fire the reporting method
 		mv.visitMethodInsn(INVOKEVIRTUAL, ExperimentContext.INTERNAL_NAME, "reportEquality", "(JLjava/lang/String;Z)V", false);

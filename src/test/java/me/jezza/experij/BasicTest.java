@@ -5,13 +5,12 @@ import java.lang.reflect.Method;
 import me.jezza.experij.interfaces.Control;
 import me.jezza.experij.interfaces.Experiment;
 import me.jezza.experij.interfaces.Results;
-import me.jezza.experij.lib.Equality;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Jezza
  */
-public class BasicTest {
+public final class BasicTest {
 	public static final Results HELLO = ExperiJ.results("Hello");
 	public static final Results TEST_THING = ExperiJ.results("TestThing");
 
@@ -117,7 +116,7 @@ public class BasicTest {
 			context.start(key, "fastToBinaryString");
 			experiment = fastToBinaryString(length);
 			context.stop(key, "fastToBinaryString");
-			context.reportEquality(key, "fastToBinaryString", Equality.equals(control, experiment));
+			context.reportEquality(key, "fastToBinaryString", control == null ? experiment == null : control.equals(experiment));
 		} catch (Throwable e) {
 			context.error(key, e);
 		}
@@ -126,10 +125,10 @@ public class BasicTest {
 			context.start(key, "countBits");
 			experiment = countBits(length);
 			context.stop(key, "countBits");
-			context.reportEquality(key, "countBits", Equality.equals(control, experiment));
+			context.reportEquality(key, "countBits", control == null ? experiment == null : control.equals(experiment));
 		} catch (Throwable e) {
 			context.error(key, e);
- 		}
+		}
 
 		context.compile(key);
 		return control;
