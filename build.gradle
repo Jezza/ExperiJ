@@ -16,7 +16,7 @@ dependencies {
 jar {
 	version = project.version
 	manifest {
-		attributes("Manifest-Version": "1.0", "Agent-Class": "me.jezza.experij.ExperiJ", "Premain-Class": "me.jezza.experij.ExperiJ")
+		attributes("Manifest-Version": "1.0", "Agent-Class": "com.experij.ExperiJ", "Premain-Class": "com.experij.ExperiJ")
 	}
 }
 
@@ -25,7 +25,7 @@ task runJupiter(type: JavaExec) {
     jvmArgs "-ea"
 	jvmArgs "-javaagent:" + jar.archivePath
 	jvmArgs "-Dexperij.debug=true"
-	jvmArgs "-Dexperij.whitelist=\"jezza\""
+	jvmArgs "-Dexperij.whitelist=\"com.experij\""
     classpath = project.sourceSets.test.runtimeClasspath
     main 'org.junit.platform.console.ConsoleLauncher'
     args '--scan-class-path'

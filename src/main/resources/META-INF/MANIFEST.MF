@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-Premain-Class: me.jezza.experij.ExperiJ
+Premain-Class: com.experij.ExperiJ
