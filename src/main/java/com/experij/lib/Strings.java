@@ -158,13 +158,13 @@ public final class Strings {
 	 * <p>
 	 * eg:
 	 * <pre>
-	 *  String result = formatKey("This is a {hello}", "{", "}", k -> Integer.toString(k.length()));
+	 *  String result = formatKey("This is a {hello}", "{", "}", k -&lt; Integer.toString(k.length()));
 	 * </pre>
 	 * result = "This is a 5"
 	 * <p>
 	 * <pre>
 	 *  String[] values = {"First", "Second"};
-	 *  String result = formatKey("This is a [0][1]", "[", "]", k -> values[Integer.valueOf(k)]);
+	 *  String result = formatKey("This is a [0][1]", "[", "]", k -&lt; values[Integer.valueOf(k)]);
 	 * </pre>
 	 * result = "This is a FirstSecond"
 	 *

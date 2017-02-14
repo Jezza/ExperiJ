@@ -3,8 +3,12 @@ repositories {
 }
 
 apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
-version = 0.3
+group = "com.experij"
+archivesBaseName = "experij"
+version = "0.4.1"
 
 dependencies {
 	testCompile 'org.junit.jupiter:junit-jupiter-api:5.0.0-M3'
@@ -18,6 +22,10 @@ jar {
 	manifest {
 		attributes("Manifest-Version": "1.0", "Agent-Class": "com.experij.ExperiJ", "Premain-Class": "com.experij.ExperiJ")
 	}
+}
+
+signing {
+    sign configurations.archives
 }
 
 task runJupiter(type: JavaExec) {
@@ -35,13 +43,67 @@ task runJupiter(type: JavaExec) {
 
 test.dependsOn runJupiter
 
-// Source jar
-task srcJar(type: Jar) {
-	from sourceSets.main.allSource
-	version = project.version
-	classifier = "src"
+javadoc {
+	// Just temp until I get around to fixing those javadoc errors. ;)
+	failOnError = false
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
 }
 
 artifacts {
-    archives srcJar
+    archives javadocJar, sourcesJar
+}
+
+uploadArchives {
+	repositories {
+		mavenDeployer {
+			beforeDeployment {
+				MavenDeployment deployment -> signing.signPom(deployment)
+			}
+			
+			repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+				authentication(userName: ossrhUsername, password: ossrhPassword)
+			}
+			
+			snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+				authentication(userName: ossrhUsername, password: ossrhPassword)
+			}
+			
+			pom.project {
+				name 'ExperiJ'
+				packaging 'jar'
+				description 'A fast and customisable runtime experiment manager for Java.'
+				url 'experij.com'
+				
+				scm {
+					url 'https://github.com/Jezza/ExperiJ'
+					connection 'scm:git:git://github.com/Jezza/ExperiJ.git'
+					developerConnection 'scm:git:git@github.com:Jezza/ExperiJ.git'
+				}
+				
+				licenses {
+					license {
+						name 'GNU Lesser General Public License v3 (LGPL-3.0)'
+						url 'https://www.gnu.org/licenses/lgpl-3.0.txt'
+					}
+				}
+				
+				developers {
+					developer {
+						id 'jezza'
+						name 'Jezza'
+						email 'jeremy.a.barrow@gmail.com'
+					}
+				}
+			}
+		}
+	}
 }
