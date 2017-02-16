@@ -10,9 +10,9 @@ import com.experij.interfaces.Control;
 import com.experij.interfaces.Experiment;
 import com.experij.repackage.org.objectweb.asm.ClassVisitor;
 import com.experij.repackage.org.objectweb.asm.Label;
+import com.experij.repackage.org.objectweb.asm.MethodVisitor;
 import com.experij.repackage.org.objectweb.asm.Opcodes;
 import com.experij.repackage.org.objectweb.asm.Type;
-import com.experij.repackage.org.objectweb.asm.MethodVisitor;
 
 /**
  * @author Jezza
@@ -88,7 +88,7 @@ final class ClassExperiment implements Opcodes {
 	/**
 	 * @return - The name of the control method.
 	 */
-	public String controlMethod() {
+	String controlMethod() {
 		if (controlMethod == null)
 			throw new IllegalStateException("Control method hasn't been discovered yet. (This might have been called too early in the execution cycle.)");
 		return controlMethod;
@@ -97,34 +97,34 @@ final class ClassExperiment implements Opcodes {
 	/**
 	 * @return - The descriptor that all experiment methods and the control method should match.
 	 */
-	public Descriptor desc() {
+	Descriptor desc() {
 		if (desc == null)
 			throw new IllegalStateException("Descriptor hasn't been set yet. (This might have been called too early in the execution cycle.)");
 		return desc;
 	}
 
-	public String names(int index) {
+	String names(int index) {
 		return methodNames.get(index);
 	}
 
 	/**
 	 * @return - The size of all the experiments, not including the control.
 	 */
-	public int size() {
+	int size() {
 		return methodNames.size();
 	}
 
 	/**
 	 * @return - The first free memory index. Accounts for parameters, and 'this'.
 	 */
-	public int firstFreeIndex() {
+	int firstFreeIndex() {
 		return desc.firstFreeIndex;
 	}
 
 	/**
 	 * @return - The bytecode value that has to be used when loading objects from the experiments.
 	 */
-	public int loadCode() {
+	int loadCode() {
 		if (desc.returnType.getSort() == Type.VOID)
 			throw new IllegalStateException("Invalid store code call.");
 		return desc.returnType.getOpcode(ILOAD);
@@ -133,17 +133,16 @@ final class ClassExperiment implements Opcodes {
 	/**
 	 * @return - The bytecode value that has to be used when storing objects from the experiments.
 	 */
-	public int storeCode() {
+	int storeCode() {
 		if (desc.returnType.getSort() == Type.VOID)
 			throw new IllegalStateException("Invalid store code call.");
 		return desc.returnType.getOpcode(ISTORE);
-
 	}
 
 	/**
 	 * @return - The bytecode value that has to be used when returning objects from the experiments.
 	 */
-	public int returnCode() {
+	int returnCode() {
 		return desc.returnType.getOpcode(IRETURN);
 	}
 
@@ -154,23 +153,20 @@ final class ClassExperiment implements Opcodes {
 	 * @param desc       - The descriptor of the method, used to confirm that the methods have the same signature.
 	 * @param control    - If this method is the control of the experiment set.
 	 */
-	public ClassExperiment register(String methodName, Descriptor desc, boolean control, boolean staticAccess) {
+	ClassExperiment register(String methodName, Descriptor desc, boolean control, boolean staticAccess) {
 		if (this.staticAccess != staticAccess)
 			throw new IllegalStateException("Multiple method signatures across experiment: " + name + ". All methods of an experiment have to have the same method signatures for now. (Including static bound methods). This might change in the future, if it does, this exception will be removed.");
-		int hash = desc.hashCode();
-		if (this.desc == null) {
-			this.desc = desc;
-		} else if (hash != this.desc.hashCode()) {
-			throw new IllegalStateException("Multiple method signatures across experiment: " + name + ". All methods of an experiment have to have the same method signatures for now. This might change in the future, if it does, this exception will be removed.");
-		}
 		if (control) {
-			if (this.controlMethod != null)
+			if (this.controlMethod != null || this.desc != null)
 				throw new IllegalStateException("There are multiple control methods declared for the experiment: " + name);
+			this.desc = desc;
 			controlMethod = methodName;
-		} else {
-			if (methodNames.contains(methodName) || !methodNames.add(methodName))
-				// I have no idea how this could even happen...
-				throw new IllegalStateException("There are multiple experiment methods with the same name: " + methodName);
+		} else if (methodNames.contains(methodName) || !methodNames.add(methodName)) {
+			// I have no idea how this could even happen, as the entire class should be rejected by the JVM...
+			throw new IllegalStateException("There are multiple experiment methods with the same name: " + methodName);
+		} else if (this.desc != null && !this.desc.matching(desc)) {
+			// TODO: 16/02/2017 Do I need better error messages if I start expanding what I can take in?
+			throw new IllegalStateException("Multiple method signatures across experiment: " + name + ". All methods of an experiment have to have the same method signatures for now. This might change in the future, if it does, this exception will be removed.");
 		}
 		return this;
 	}
@@ -182,7 +178,7 @@ final class ClassExperiment implements Opcodes {
 	 * @param mv - The {@link MethodVisitor} that should be used to write the instructions.
 	 * @return - Chaining
 	 */
-	public ClassExperiment loadAllParameters(MethodVisitor mv) {
+	ClassExperiment loadAllParameters(MethodVisitor mv) {
 		Type[] argumentTypes = desc.argumentTypes;
 		int count = argumentTypes.length;
 		if (count > 0) {
@@ -206,7 +202,7 @@ final class ClassExperiment implements Opcodes {
 	 * @param loadIndex - The index of the argument. (Used to load the parameter into the locals)
 	 * @return - Chaining
 	 */
-	public ClassExperiment convertToString(MethodVisitor mv, Type argument, int loadIndex) {
+	ClassExperiment convertToString(MethodVisitor mv, Type argument, int loadIndex) {
 		// Get the correct load code from the argument type.
 		int loadCode = argument.getOpcode(ILOAD);
 		// Load the parameter from the stack at the given index.
@@ -243,7 +239,7 @@ final class ClassExperiment implements Opcodes {
 	 * @param experimentMemoryIndex - The memory index that the contains an experiment's results.
 	 * @return - Chaining
 	 */
-	public ClassExperiment invokeEquals(MethodVisitor mv, int loadCode, int controlMemoryIndex, int experimentMemoryIndex) {
+	ClassExperiment invokeEquals(MethodVisitor mv, int loadCode, int controlMemoryIndex, int experimentMemoryIndex) {
 		Type returnType = desc.returnType;
 		switch (returnType.getSort()) {
 			case Type.BOOLEAN:
@@ -370,35 +366,35 @@ final class ClassExperiment implements Opcodes {
 	 * Used to confirm that the experiment was built correctly.
 	 * Will throw exceptions if the data within this class is incorrect.
 	 */
-	public void validate() {
+	void validate() {
 		if (controlMethod == null || desc == null)
 			throw new IllegalStateException(format("No @{} was provided for: {}.", Control.class.getSimpleName(), name));
 		if (methodNames.isEmpty())
-			throw new IllegalStateException(format("No @{} was provided for: {}.", Experiment.class.getSimpleName(), name));
+			throw new IllegalStateException(format("No @{}(s) were provided for: {}.", Experiment.class.getSimpleName(), name));
 	}
 
-	public ExperimentVisitor createEntryPoint(ClassVisitor cv) {
+	ExperimentVisitor createEntryPoint(ClassVisitor cv) {
 		return createMethod(cv, methodAccess, entryPoint);
 	}
 
-	public ExperimentVisitor createMethod(ClassVisitor cv, String name) {
+	ExperimentVisitor createMethod(ClassVisitor cv, String name) {
 		return createMethod(cv, methodAccess, name);
 	}
 
-	public ExperimentVisitor createMethod(ClassVisitor cv, int access, String name) {
+	private ExperimentVisitor createMethod(ClassVisitor cv, int access, String name) {
 		Descriptor desc = this.desc;
 		return new ExperimentVisitor(this, cv.visitMethod(access, name, desc.toString(), desc.signature, desc.exceptions), staticAccess);
 	}
 
-	public ClassExperiment invokeEntryPoint(MethodVisitor mv) {
+	ClassExperiment invokeEntryPoint(MethodVisitor mv) {
 		return invoke(mv, entryPoint);
 	}
 
-	public ClassExperiment invokeControl(MethodVisitor mv) {
+	ClassExperiment invokeControl(MethodVisitor mv) {
 		return invoke(mv, format(ExperiJ.RENAMED_METHOD_FORMAT, controlMethod));
 	}
 
-	public ClassExperiment invokeExperiment(MethodVisitor mv, int index) {
+	ClassExperiment invokeExperiment(MethodVisitor mv, int index) {
 		return invoke(mv, format(ExperiJ.RENAMED_METHOD_FORMAT, methodNames.get(index)));
 	}
 
