@@ -16,14 +16,16 @@ public final class ExperimentContext {
 	private final String experimentName;
 	private final String controlMethod;
 	private final int experimentCount;
-	private final Map<Long, ExperimentData> activeData = new HashMap<>();
-	private final AtomicLong nextKey = new AtomicLong(0);
+	private final Map<Long, ExperimentData> activeData;
+	private final AtomicLong nextKey;
 
 	ExperimentContext(String experimentName, String controlMethod, int experimentCount) {
 		this.results = ExperiJ.RESULT_MAP.computeIfAbsent(experimentName, ExperimentResults::new);
 		this.experimentName = experimentName;
 		this.controlMethod = controlMethod;
 		this.experimentCount = experimentCount;
+		activeData = new HashMap<>();
+		nextKey = new AtomicLong(0);
 	}
 
 	public long startControl(String... params) {

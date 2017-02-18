@@ -26,39 +26,39 @@ final class ExperimentData {
 		measurements = new Measurement[experimentCount];
 	}
 
-	public void startControl() {
+	void startControl() {
 		control = System.nanoTime();
 	}
 
-	public void stopControl(long end) {
+	void stopControl(long end) {
 		control = end - control;
 
 	}
 
-	public void start(String methodName) {
+	void start(String methodName) {
 		Measurement measurement = new Measurement();
 		measurement.methodName = methodName;
 		measurements[active] = measurement;
 		measurement.time = System.nanoTime();
 	}
 
-	public void stop(String methodName, long end) {
+	void stop(String methodName, long end) {
 		Measurement measurement = measurements[active];
 		measurement.time = end - measurement.time;
 	}
 
-	public void equality(String methodName, boolean equal) {
+	void equality(String methodName, boolean equal) {
 		measurements[active++].equal = equal;
 	}
 
-	public void error(Throwable t) {
+	void error(Throwable t) {
 		Measurement measurement = measurements[active];
 		measurement.time = ExperiJ.ERRORED;
 		measurement.t = t;
 		measurement.equal = false;
 	}
 
-	public void compile(ExperimentResults results) {
+	void compile(ExperimentResults results) {
 		Map<String, ExperimentTime> experiments = new HashMap<>();
 		for (Measurement s : measurements)
 			experiments.put(s.methodName, new ExperimentTime(s.methodName, s.time, s.equal, s.t));

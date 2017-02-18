@@ -139,7 +139,6 @@ public final class Strings {
 			// Look for first character.
 			if (source[i] != first)
 				while (++i <= max && source[i] != first) ;
-
 			// Found first character, now look at the rest of v2
 			if (i <= max) {
 				int j = i + 1;

@@ -165,7 +165,6 @@ final class ClassExperiment implements Opcodes {
 			// I have no idea how this could even happen, as the entire class should be rejected by the JVM...
 			throw new IllegalStateException("There are multiple experiment methods with the same name: " + methodName);
 		} else if (this.desc != null && !this.desc.matching(desc)) {
-			// TODO: 16/02/2017 Do I need better error messages if I start expanding what I can take in?
 			throw new IllegalStateException("Multiple method signatures across experiment: " + name + ". All methods of an experiment have to have the same method signatures for now. This might change in the future, if it does, this exception will be removed.");
 		}
 		return this;

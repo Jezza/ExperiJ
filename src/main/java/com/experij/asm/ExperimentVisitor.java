@@ -1,9 +1,9 @@
 package com.experij.asm;
 
-import com.experij.repackage.org.objectweb.asm.Opcodes;
 import com.experij.ExperiJ;
 import com.experij.ExperimentContext;
 import com.experij.repackage.org.objectweb.asm.MethodVisitor;
+import com.experij.repackage.org.objectweb.asm.Opcodes;
 import com.experij.repackage.org.objectweb.asm.Type;
 
 /**
@@ -22,7 +22,7 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	/**
 	 * @return - The descriptor that all experiment methods and the control method should match.
 	 */
-	public Descriptor desc() {
+	Descriptor desc() {
 		return experiment.desc();
 	}
 
@@ -32,7 +32,7 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	 *
 	 * @return - Chaining
 	 */
-	public ExperimentVisitor loadThis() {
+	ExperimentVisitor loadThis() {
 		if (!staticAccess)
 			visitVarInsn(ALOAD, 0);
 		return this;
@@ -43,7 +43,7 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	 *
 	 * @return - Chaining.
 	 */
-	public ExperimentVisitor loadAllParameters() {
+	ExperimentVisitor loadAllParameters() {
 		experiment.loadAllParameters(this);
 		return this;
 	}
@@ -54,7 +54,7 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	 * @param memoryIndex - The memory index that will be used for loading. NOTE: NOT THE OFFSET.
 	 * @return - Chaining
 	 */
-	public ExperimentVisitor load(int memoryIndex) {
+	ExperimentVisitor load(int memoryIndex) {
 		visitVarInsn(experiment.loadCode(), memoryIndex);
 		return this;
 	}
@@ -66,7 +66,7 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	 * @param offset - The memory offset from {@link ClassExperiment#firstFreeIndex()}
 	 * @return - The final memory index that was used. Use this to load the object back onto the stack.
 	 */
-	public int store(int offset) {
+	int store(int offset) {
 		return opcode(experiment.storeCode(), offset);
 	}
 
@@ -77,13 +77,13 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	 * @param offset - The offset from {@link ClassExperiment#firstFreeIndex()}
 	 * @return - The final memory index. Use this to load the object back onto the stack.
 	 */
-	public int opcode(int opcode, int offset) {
+	int opcode(int opcode, int offset) {
 		int memoryIndex = experiment.firstFreeIndex() + offset;
 		visitVarInsn(opcode, memoryIndex);
 		return memoryIndex;
 	}
 
-	public void loadInt(int value) {
+	void loadInt(int value) {
 		if (value < -1) {
 			visitLdcInsn(value);
 		} else if (value <= 5) {
@@ -97,7 +97,7 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		}
 	}
 
-	public boolean voidMethod() {
+	boolean voidMethod() {
 		return experiment.returnCode() == RETURN;
 	}
 
@@ -105,7 +105,7 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	 * @param offset - Offset from first initial free memory index.
 	 * @return - The index that the results object is stored within, NOTE: NOT the offset.
 	 */
-	public int createResults(int offset) {
+	int createResults(int offset) {
 		int resultIndex = experiment.firstFreeIndex() + offset;
 		visitLdcInsn(experiment.name);
 		visitLdcInsn(experiment.controlMethod());
@@ -121,7 +121,7 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	 * @param resultIndex - The memory index of the results.
 	 * @return - Chaining.
 	 */
-	public ExperimentVisitor startControl(int resultIndex) {
+	ExperimentVisitor startControl(int resultIndex) {
 		// Load the results variable
 		visitVarInsn(ALOAD, resultIndex);
 		Type[] argumentTypes = experiment.desc().argumentTypes;
@@ -158,7 +158,7 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	 * @param keyIndex    - The memory index of the key used to identify the specific experiment run.
 	 * @return - Chaining.
 	 */
-	public ExperimentVisitor stopControl(int resultIndex, int keyIndex) {
+	ExperimentVisitor stopControl(int resultIndex, int keyIndex) {
 		// Load the results variable
 		visitVarInsn(ALOAD, resultIndex);
 		// Load the unique key index
@@ -176,7 +176,7 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	 * @param keyIndex    - The memory index of the key used to identify the specific experiment run.
 	 * @return - Chaining.
 	 */
-	public ExperimentVisitor startExperiment(int index, int resultIndex, int keyIndex) {
+	ExperimentVisitor startExperiment(int index, int resultIndex, int keyIndex) {
 		return invokeResults(index, resultIndex, keyIndex, true);
 	}
 
@@ -189,7 +189,7 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 	 * @param keyIndex    - The memory index of the key used to identify the specific experiment run.
 	 * @return - Chaining.
 	 */
-	public ExperimentVisitor stopExperiment(int index, int resultIndex, int keyIndex) {
+	ExperimentVisitor stopExperiment(int index, int resultIndex, int keyIndex) {
 		return invokeResults(index, resultIndex, keyIndex, false);
 	}
 
@@ -214,17 +214,17 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		return this;
 	}
 
-	public ExperimentVisitor invokeControl() {
+	ExperimentVisitor invokeControl() {
 		experiment.invokeControl(this);
 		return this;
 	}
 
-	public ExperimentVisitor invokeExperiment(int index) {
+	ExperimentVisitor invokeExperiment(int index) {
 		experiment.invokeExperiment(this, index);
 		return this;
 	}
 
-	public ExperimentVisitor reportEquality(int resultIndex, int keyIndex, int experimentIndex, int controlMemoryIndex, int experimentMemoryIndex) {
+	ExperimentVisitor reportEquality(int resultIndex, int keyIndex, int experimentIndex, int controlMemoryIndex, int experimentMemoryIndex) {
 		// Note: controlMemoryIndex and experimentMemoryIndex can be -1, if it's a void method.
 		// We branch before we use them, but it should be kept in mind when altering this method.
 		// Load the results variable
@@ -246,7 +246,7 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		return this;
 	}
 
-	public ExperimentVisitor compile(int resultIndex, int keyIndex) {
+	ExperimentVisitor compile(int resultIndex, int keyIndex) {
 		// Load the results variable
 		visitVarInsn(ALOAD, resultIndex);
 		// Load the execution key
@@ -256,7 +256,7 @@ final class ExperimentVisitor extends MethodVisitor implements Opcodes {
 		return this;
 	}
 
-	public ExperimentVisitor error(int resultIndex, int keyIndex, int errorIndex) {
+	ExperimentVisitor error(int resultIndex, int keyIndex, int errorIndex) {
 		// Load the results variable
 		visitVarInsn(ALOAD, resultIndex);
 		// Load the execution key

@@ -29,7 +29,7 @@ final class ExperiJClassVisitor extends ClassVisitor implements Opcodes {
 		return new ExperiJMethodVisitor(this, mv, access, name, desc, signature, exceptions);
 	}
 
-	protected ClassExperiment registerExperiment(String experimentName, String methodName, Descriptor desc, boolean control, boolean staticAccess) {
+	ClassExperiment registerExperiment(String experimentName, String methodName, Descriptor desc, boolean control, boolean staticAccess) {
 		// Local var for the lambda
 		String className = this.className;
 		if (control)

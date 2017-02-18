@@ -80,7 +80,6 @@ final class Descriptor {
 			return true;
 		if (o == null || getClass() != o.getClass())
 			return false;
-
 		Descriptor that = (Descriptor) o;
 		if (signature == null ? that.signature != null : !signature.equals(that.signature))
 			return false;
@@ -91,7 +90,7 @@ final class Descriptor {
 
 	@Override
 	public int hashCode() {
-		int hash = 31 + toString().hashCode();
+		int hash = 31 + desc.hashCode();
 		if (signature != null)
 			hash = 31 * hash + signature.hashCode();
 		if (exceptions != null && exceptions.length != 0) {
